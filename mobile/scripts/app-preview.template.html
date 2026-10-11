@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CarTune</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#181d23;--panel:#222a33;--panel2:#2b3540;--line:#36414d;--text:#eaeef2;--muted:#98a4b0;--accent:#5fa8d3;--accentInk:#0e1418;
+ --green:#2fb36b;--yellow:#e8c33a;--orange:#f08a2b;--red:#e0463c;--skel:#2b3540}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){--bg:#eef1f4;--panel:#fff;--panel2:#f2f5f8;--line:#d5dbe2;--text:#1a222b;--muted:#5c6874;--accent:#2d7db0;--accentInk:#fff;--skel:#e3e8ed}}
+:root[data-theme="light"]{--bg:#eef1f4;--panel:#fff;--panel2:#f2f5f8;--line:#d5dbe2;--text:#1a222b;--muted:#5c6874;--accent:#2d7db0;--accentInk:#fff;--skel:#e3e8ed}
+*,*::before,*::after{box-sizing:inherit}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:16px/1.5 Barlow,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 120px}
+.top{display:flex;align-items:center;gap:12px;padding:14px 0 10px}
+.brand{font-family:"Barlow Condensed",Barlow,sans-serif;font-weight:700;font-size:1.6rem;letter-spacing:.3px;margin-right:auto}
+.pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:.9rem}
+.pill i{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+.pill.on i{background:var(--green)}
+.pill.busy i{background:var(--yellow);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);cursor:pointer;font-size:1.1rem}
+/* vehicle hero */
+.hero{background:var(--panel);border-radius:20px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:12px 18px}
+.hero h1{font-family:"Barlow Condensed",Barlow,sans-serif;font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.02;margin:0}
+.hero .spec{color:var(--muted);margin:4px 0 0}
+.checks{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px}
+.check{display:flex;align-items:center;gap:7px;background:var(--panel2);border-radius:10px;padding:7px 11px;font-size:.92rem}
+.check b{font-weight:600}
+.check .st{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:.72rem;font-weight:700;flex:none}
+.st.ok{background:var(--green);color:#08140d}.st.wait{border:2px solid var(--muted);border-top-color:transparent;animation:spin .8s linear infinite}.st.no{background:var(--line)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skel{display:inline-block;height:1em;border-radius:6px;background:var(--skel);min-width:8em;vertical-align:middle;animation:shimmer 1.6s ease-in-out infinite}
+@keyframes shimmer{50%{opacity:.5}}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:5px;width:120px}
+.bar div{height:100%;background:var(--accent);transition:width .2s}
+.link{background:none;border:none;color:var(--accent);cursor:pointer;padding:6px 0;font-weight:600}
+.fitted{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px}
+.lbl{color:var(--muted);font-size:.88rem;margin:0 0 6px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:8px}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:6px 13px;cursor:pointer;min-height:38px;font-size:.93rem}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accentInk);font-weight:600}
+.oncar{display:flex;align-items:center;gap:10px;margin:16px 0 4px;color:var(--muted)}
+.oncar b{color:var(--text)}
+h2{font-family:"Barlow Condensed",Barlow,sans-serif;font-size:1.5rem;margin:18px 0 10px}
+/* tiles */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.tile{position:relative;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;cursor:pointer;overflow:hidden;display:flex;flex-direction:column;gap:6px;min-height:170px}
+.tile::before{content:"";position:absolute;inset:0 0 auto 0;height:5px;background:var(--z)}
+.tile:hover{border-color:var(--accent)}
+.tile h3{margin:4px 0 0;font-size:1.2rem}
+.tile .feel{color:var(--muted);font-size:.93rem;margin:0}
+.meters{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:.8rem;color:var(--muted);align-items:center;margin-top:auto}
+.dots{display:flex;gap:3px}.dots span{width:14px;height:6px;border-radius:3px;background:var(--line)}.dots span.f{background:var(--text)}
+.tfoot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.8rem}
+.zl{display:flex;align-items:center;gap:5px;font-weight:600}.zl i{width:9px;height:9px;border-radius:50%;background:var(--z)}
+.tag{border:1px solid var(--line);border-radius:6px;padding:0 6px;color:var(--muted)}
+.tag.live{border-color:var(--green);color:var(--green)}
+.base{font-size:.75rem;color:var(--muted)}
+/* detail */
+.back{display:inline-flex;align-items:center;gap:6px;background:none;border:none;color:var(--accent);font-weight:600;cursor:pointer;padding:10px 0}
+.dhead h1{font-family:"Barlow Condensed",sans-serif;font-size:clamp(2rem,6vw,2.8rem);margin:0;line-height:1}
+.dhead p{color:var(--muted);margin:4px 0 0}
+.summary{display:flex;gap:14px;align-items:center;background:var(--panel);border:2px solid var(--z);border-radius:16px;padding:14px;margin-top:14px}
+.summary .big{width:22px;height:22px;border-radius:50%;background:var(--z);flex:none}
+.summary b{font-family:"Barlow Condensed",sans-serif;font-size:1.4rem;display:block;line-height:1.1}
+.summary span{color:var(--muted);font-size:.9rem}
+.meter{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:6px;background:var(--line)}
+.warn{background:var(--panel);border-left:5px solid var(--z);border-radius:10px;padding:10px 12px;margin-top:10px}
+.warn b{display:block}
+.tabs{display:flex;gap:8px;overflow-x:auto;margin:20px 0 10px;padding-bottom:4px}
+.tab{font-weight:600;display:flex;align-items:center;gap:7px;border:none;background:var(--panel);border-radius:10px;padding:9px 14px;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--panel2);box-shadow:inset 0 -3px 0 var(--accent)}
+.tab i{width:10px;height:10px;border-radius:50%;background:var(--z)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.card{background:var(--panel);border-radius:16px;padding:14px}
+.head{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.head h3{margin:0;font-size:1.08rem}.val{font-weight:700;color:var(--z);font-variant-numeric:tabular-nums}
+.sl{display:flex;align-items:center;gap:10px;margin:8px 0 2px}
+.step{font-size:1.4rem;font-weight:700;width:40px;height:40px;border-radius:50%;border:none;background:var(--panel2);cursor:pointer;flex:none}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:44px;background:transparent;margin:0;cursor:pointer;min-width:0}
+input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--track)}
+input[type=range]::-moz-range-track{height:12px;border-radius:6px;background:var(--track)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;margin-top:-9px;border-radius:50%;background:#f4f6f8;border:5px solid var(--z);box-shadow:0 0 0 4px color-mix(in srgb,var(--z) 30%,transparent)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#f4f6f8;border:5px solid var(--z)}
+.badge{display:inline-block;background:var(--z);color:#10161c;font-weight:700;font-size:.78rem;border-radius:7px;padding:2px 9px;margin:4px 0}
+.card p{margin:4px 0}.why{color:var(--muted)}
+.fix{display:block;width:100%;text-align:left;font-weight:600;background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:10px;padding:9px 12px;margin-top:6px;cursor:pointer}
+.fix small{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.tgl{display:flex;align-items:center;gap:12px}.tgl h3{flex:1;margin:0}
+.sw{position:relative;width:52px;height:30px;border-radius:15px;border:0;background:#3a4450;cursor:pointer;flex:none}.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .15s}.sw[aria-checked=true]{background:var(--accent)}.sw[aria-checked=true]::after{left:25px}
+.risk{background:color-mix(in srgb,var(--red) 16%,var(--panel));border-radius:10px;padding:10px 12px;margin-top:8px}.risk b{color:var(--red)}
+.dock{position:fixed;left:0;right:0;bottom:0;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);z-index:20}
+.dock .in{max-width:1040px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.dock .note{margin-right:auto;color:var(--muted);font-size:.9rem}
+.primary{background:var(--accent);color:var(--accentInk);border:none;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer;font-size:1.02rem}
+.primary:disabled{opacity:.4;cursor:not-allowed}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:12px;padding:12px 16px;cursor:pointer}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:40;align-items:flex-end;justify-content:center}
+.scrim.open{display:flex}
+.sheet{background:var(--panel);width:100%;max-width:560px;border-radius:20px 20px 0 0;padding:18px 18px calc(22px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:20px}}
+.sheet h2{margin-top:0}
+.steps{list-style:none;padding:0;margin:10px 0;display:grid;gap:8px}
+.steps li{display:flex;gap:10px;align-items:flex-start}
+.field{display:grid;gap:4px;margin:8px 0}.field input,.field select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:999px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.toast.show{opacity:1}
+.demo{font-size:.78rem;color:var(--muted);text-align:center;margin-top:24px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.level{text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:9px 12px;cursor:pointer}
+.level b{display:block}.level span{font-size:.8rem;color:var(--muted)}
+.level[aria-checked="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.lvtag{font-size:.7rem;font-weight:600;color:var(--accent);border:1px solid var(--accent);border-radius:5px;padding:0 5px;vertical-align:middle}
+#pro{margin-top:26px}
+.probar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px}
+.probar input{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:200px;flex:1 1 220px}
+.prolayout{display:grid;grid-template-columns:230px 1fr;gap:12px;align-items:start}
+@media (max-width:760px){.prolayout{grid-template-columns:1fr}.tlist{display:flex!important;overflow-x:auto}.titem{min-width:180px}}
+.tlist{display:grid;gap:6px}
+.titem{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer}
+.titem span{display:block;font-weight:600;font-size:.93rem}.titem small{color:var(--muted)}
+.titem[aria-current="true"]{border-color:var(--accent)}
+.teditor{background:var(--panel);border-radius:16px;padding:14px;min-width:0}
+.thead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.thead h3{margin:0}
+.tbadges{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.tag.demo{border-color:var(--yellow);color:var(--yellow)}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tool{border:1px solid var(--line);background:var(--panel2);border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:600;font-size:.88rem;min-height:36px}
+.tool:disabled{opacity:.35;cursor:not-allowed}.tool.on{border-color:var(--accent);color:var(--accent)}
+.gridwrap{overflow:auto;max-width:100%;border-radius:10px;border:1px solid var(--line);max-height:60vh}
+.tgrid{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums;font-size:.82rem;user-select:none;-webkit-user-select:none}
+.tgrid th{position:sticky;background:var(--panel2);color:var(--muted);font-weight:600;padding:5px 7px;text-align:right;z-index:1}
+.tgrid thead th{top:0}.tgrid tbody th{left:0}.tgrid .corner{left:0;z-index:2;font-size:.7rem}
+.tgrid td{padding:5px 7px;text-align:right;color:#fff;cursor:cell;border-right:1px solid rgba(0,0,0,.15);border-bottom:1px solid rgba(0,0,0,.15);min-width:48px}
+.tgrid td.sel{outline:2px solid #fff;outline-offset:-2px;box-shadow:inset 0 0 0 999px rgba(255,255,255,.18)}
+.tgrid td.chg{font-weight:700;text-decoration:underline dotted}
+.tgrid td.f-yellow{box-shadow:inset 0 0 0 3px var(--yellow)}.tgrid td.f-orange{box-shadow:inset 0 0 0 3px var(--orange)}.tgrid td.f-red{box-shadow:inset 0 0 0 3px var(--red)}
+.tgrid td.sel.f-red,.tgrid td.sel.f-orange,.tgrid td.sel.f-yellow{outline-color:#fff}
+#proSettings{margin-top:24px}
+.setsearch{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;margin-bottom:10px}
+.sgroup{background:var(--panel);border-radius:12px;margin-bottom:8px}
+.sgroup summary{display:flex;justify-content:space-between;padding:12px 14px;cursor:pointer;list-style:none}
+.sgroup summary span{color:var(--muted)}
+.srows{padding:0 14px 10px;display:grid;gap:4px}
+.srow{display:grid;grid-template-columns:1fr 130px 60px;gap:8px;align-items:center;padding:4px 0;border-top:1px solid var(--line)}
+.srow .sname small{display:block;color:var(--accent);font-size:.75rem}
+.srow input,.srow select{font:inherit;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;width:100%}
+.srow.chg input,.srow.chg select{border-color:var(--accent)}
+.sunit{color:var(--muted);font-size:.85rem}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">CarTune</div>
+    <div class="pill" id="pill"><i></i><span>Searching…</span></div>
+    <button class="iconbtn" id="settingsBtn" aria-label="Settings">⚙︎</button>
+  </div>
+
+  <section id="home">
+    <div class="hero" id="hero"></div>
+    <div class="oncar" id="oncar"></div>
+    <h2>Your tunes</h2>
+    <div class="grid" id="grid"></div>
+    <p class="demo">Demo mode: a simulated car is connected. On a real car every detail above is read automatically.</p>
+  </section>
+
+  <section id="detail" hidden></section>
+</div>
+
+<div class="dock" id="dock" hidden><div class="in"><span class="note" id="dockNote"></span><button class="ghost" id="resetBtn">Reset</button><button class="primary" id="flashBtn">Flash</button></div></div>
+<div class="scrim" id="scrim"><div class="sheet" id="sheet" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/*BUNDLE*/
+var R = requireMod("./tune/rules"), P = requireMod("./tune/presets"), E = requireMod("./ecu/ecuProfiles"), T = requireMod("./tune/tables");
+var ZC={green:"var(--green)",yellow:"var(--yellow)",orange:"var(--orange)",red:"var(--red)"};
+var ZL={green:"No risk",yellow:"Fine, could be better",orange:"Warning",red:"Likely damage"};
+var ORDER=["green","yellow","orange","red"];
+var UPG={intercooler:"Intercooler",fuelSystem:"Injectors + pump",internals:"Forged internals / springs",cooling:"Cooling",driveline:"Clutch / gearbox"};
+var DEMO_CARS=[
+  {key:"ve",title:"2008 Holden Commodore SS",spec:"6.0 L V8 · 6-speed automatic",engine:"na_petrol",fuel:"98",vin:"6G1EK5EU18L000123",ecu:"gm-e38-e67",osid:"12612384"},
+  {key:"fg",title:"2012 Ford Falcon XR6 Turbo",spec:"4.0 L turbo I6 · 6-speed automatic",engine:"turbo_petrol",fuel:"98",vin:"6FPAAAJGSWCG12345",ecu:"ford-spanish-oak",osid:"HACCKG6"},
+  {key:"hl",title:"2019 Toyota HiLux SR5",spec:"2.8 L turbo diesel · 6-speed automatic",engine:"turbo_diesel",fuel:"diesel",vin:"MR0HA3CD700123456",ecu:"denso-toyota",osid:"89663-0K"}
+];
+var store={get:function(k,d){try{var v=localStorage.getItem("cartune:"+k);return v?JSON.parse(v):d}catch(e){return d}},set:function(k,v){try{localStorage.setItem("cartune:"+k,JSON.stringify(v))}catch(e){}}};
+var S={pkg:store.get("pkg","standard"),agreed:store.get("agreed",false),carKey:store.get("car","ve"),car:null,conn:"searching",found:{},backup:0,skill:store.get("skill","simple"),
+  upgrades:store.get("upgrades",{intercooler:false,fuelSystem:false,internals:false,cooling:false,driveline:false}),
+  fuel:null,slots:{},onCar:"factory",view:"home",preset:null,seg:null,open:{}};
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function ctx(){return{engine:S.car.engine,fuel:S.fuel,upgrades:S.upgrades,skill:S.skill}}
+function toast(t){var el=$("toast");el.textContent=t;el.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(function(){el.classList.remove("show")},1600)}
+function slotKey(){return "slots:"+S.car.key}
+function slotValues(id){var s=S.slots[id];if(s)return s;var p=P.PRESETS.find(function(x){return x.id===id});return P.presetValues(p,S.car.engine)}
+function saveSlot(id,v){S.slots[id]=v;store.set(slotKey(),S.slots)}
+function isEdited(id){return !!S.slots[id]}
+
+/* ---------- connection: auto-detect, progressive reveal ---------- */
+function connect(){
+  S.car=DEMO_CARS.find(function(c){return c.key===S.carKey})||DEMO_CARS[0];
+  S.fuel=store.get("fuel:"+S.car.key,S.car.fuel);S.slots=store.get(slotKey(),{});S.onCar=store.get("oncar:"+S.car.key,"factory");
+  S.conn="searching";S.found={};S.backup=0;render();
+  var seq=[[500,function(){S.conn="connecting";S.found.receiver=true}],[1100,function(){S.found.vin=true}],[1700,function(){S.found.vehicle=true}],[2300,function(){S.found.ecu=true;S.conn="on"}]];
+  seq.forEach(function(s){setTimeout(function(){s[1]();render()},s[0])});
+  setTimeout(function tick(){S.backup=Math.min(100,S.backup+7);render();if(S.backup<100)setTimeout(tick,160)},2500);
+}
+
+/* ---------- home ---------- */
+function st(ok,busy){return '<span class="st '+(ok?"ok":busy?"wait":"no")+'">'+(ok?"✓":"")+'</span>'}
+function renderHome(){
+  var f=S.found,car=S.car,prof=E.ECU_PROFILES.find(function(p){return p.id===car.ecu});
+  var pill=$("pill");pill.className="pill "+(S.conn==="on"?"on":"busy");
+  pill.querySelector("span").textContent=S.conn==="on"?"Connected":S.conn==="connecting"?"Reading car…":"Searching…";
+  var title=f.vehicle?esc(car.title):'<span class="skel" style="min-width:12em;height:1.4em"></span>';
+  var spec=f.vehicle?esc(car.spec):'<span class="skel"></span>';
+  var backupTxt=S.backup>=100?"Stock file backed up":S.backup>0?"Backing up stock file… "+S.backup+"%":"Stock file backup";
+  $("hero").innerHTML='<div><h1>'+title+'</h1><p class="spec">'+spec+'</p></div>'+
+    '<div><button class="link" id="editCar">Edit details</button></div>'+
+    '<div class="checks">'+
+      '<div class="check">'+st(f.receiver,!f.receiver)+'<span>Receiver</span></div>'+
+      '<div class="check">'+st(f.vin,f.receiver&&!f.vin)+'<span>VIN '+(f.vin?'<b>'+esc(car.vin)+'</b>':'')+'</span></div>'+
+      '<div class="check">'+st(f.ecu,f.vehicle&&!f.ecu)+'<span>ECU '+(f.ecu?'<b>'+esc(prof.manufacturer+" "+prof.family)+'</b>':'')+'</span></div>'+
+      '<div class="check">'+st(S.backup>=100,S.backup>0&&S.backup<100)+'<span>'+backupTxt+(S.backup>0&&S.backup<100?'<div class="bar"><div style="width:'+S.backup+'%"></div></div>':'')+'</span></div>'+
+    '</div>'+
+    '<div class="fitted"'+(f.ecu?'':' hidden')+'><p class="lbl">Fuel you run</p><div class="chips" id="fuelChips"></div>'+
+    '<p class="lbl">Parts fitted (the app can’t see these, so tap any you have)</p><div class="chips" id="upChips"></div></div>';
+  $("editCar").onclick=openEditCar;
+  if(f.ecu){
+    var fc=$("fuelChips");(S.car.engine==="turbo_diesel"?["diesel"]:["91","95","98","E85"]).forEach(function(k){fc.appendChild(chip(k==="diesel"?"Diesel":k==="E85"?"E85":k+" petrol",S.fuel===k,function(){S.fuel=k;store.set("fuel:"+S.car.key,k);render()}))});
+    var uc=$("upChips");Object.keys(UPG).forEach(function(k){uc.appendChild(chip(UPG[k],S.upgrades[k],function(){S.upgrades[k]=!S.upgrades[k];store.set("upgrades",S.upgrades);render()}))});
+  }
+  var on=P.PRESETS.find(function(p){return p.id===S.onCar});
+  $("oncar").innerHTML=f.ecu?'On the car now: <b>'+esc(on.name)+'</b>':'';
+  var g=$("grid");g.innerHTML="";
+  P.PRESETS.forEach(function(p){
+    var b=document.createElement("button");b.className="tile";
+    if(!f.ecu){b.innerHTML='<h3>'+esc(p.name)+'</h3><p class="feel">'+esc(p.feel)+'</p><span class="skel" style="margin-top:auto;width:60%"></span>';b.style.setProperty("--z","var(--line)");b.disabled=true;g.appendChild(b);return}
+    var ev=R.evaluate(ctx(),slotValues(p.id));b.style.setProperty("--z",ZC[ev.overall]);
+    function dots(n){var s="";for(var i=1;i<=5;i++)s+='<span class="'+(i<=n?"f":"")+'"></span>';return '<div class="dots">'+s+'</div>'}
+    b.innerHTML='<h3>'+esc(p.name)+'</h3><p class="feel">'+esc(p.feel)+'</p>'+
+      '<div class="meters"><span>Power</span>'+dots(p.power)+'<span>Economy</span>'+dots(p.economy)+'</div>'+
+      '<div class="tfoot"><span class="zl"><i></i>'+ZL[ev.overall]+'</span>'+(S.onCar===p.id?'<span class="tag live">On car</span>':'')+(isEdited(p.id)?'<span class="tag">Edited</span>':'')+(p.needsPull?'<span class="tag">Needs pull log</span>':'')+'</div>'+
+      '<div class="base">Base file: '+(S.backup>=100?"stock read, "+new Date().toLocaleDateString("en-AU",{day:"numeric",month:"short"}):"saving…")+'</div>';
+    b.setAttribute("aria-label",p.name+". "+p.feel+" "+ZL[ev.overall]);
+    b.onclick=function(){openPreset(p.id)};g.appendChild(b);
+  });
+}
+function chip(label,on,fn){var b=document.createElement("button");b.className="chip";b.textContent=label;b.setAttribute("aria-pressed",on?"true":"false");b.onclick=fn;return b}
+
+/* ---------- detail ---------- */
+function openPreset(id){S.view="detail";S.preset=id;S.seg=null;S.open={};builtKey=null;history.pushState({v:"detail"},"");render();window.scrollTo(0,0)}
+window.onpopstate=function(){if(S.view!=="home"){S.view="home";render()}};
+var builtKey=null;
+function snapR(d,nv){var r=R.rangeFor(d,S.skill);return +Math.min(r.max,Math.max(r.min,Math.round((nv-d.min)/d.step)*d.step+d.min)).toFixed(3)}
+function snap(d,nv){return +Math.min(d.max,Math.max(d.min,Math.round((nv-d.min)/d.step)*d.step+d.min)).toFixed(3)}
+function trackFor(d,b){var rg=R.rangeFor(d,S.skill),min=rg.min,max=rg.max,span=max-min;function p(v){return((Math.min(max,Math.max(min,v))-min)/span*100).toFixed(2)+"%"}
+  var s=[],low=b.low!==undefined?Math.max(min,b.low):min;if(low>min)s.push("var(--yellow) 0%","var(--yellow) "+p(low));
+  s.push("var(--green) "+p(low),"var(--green) "+p(b.g),"var(--yellow) "+p(b.g),"var(--yellow) "+p(b.y),"var(--orange) "+p(b.y),"var(--orange) "+p(b.o),"var(--red) "+p(b.o),"var(--red) 100%");
+  return "linear-gradient(90deg,"+s.join(",")+")"}
+function doAction(p,a){
+  if(a.kind==="toggle"){var t=R.TOGGLES.find(function(x){return x.id===a.id});
+    if(t&&t.agreement&&a.value!==t.stock&&!S.agreed){openAgreement(function(){doAction(p,a)});return}}
+  var res=R.applyAction(ctx(),slotValues(p.id),a);S.fuel=res.ctx.fuel;S.upgrades=res.ctx.upgrades;store.set("upgrades",S.upgrades);store.set("fuel:"+S.car.key,S.fuel);saveSlot(p.id,res.values);toast("Applied");render();
+}
+function fillFixes(host,list,p){if(!host)return;list.forEach(function(a){var b=document.createElement("button");b.className="fix";b.innerHTML=esc(a.text)+(a.why?'<small>'+esc(a.why)+'</small>':'');b.onclick=function(){doAction(p,a.action)};host.appendChild(b)})}
+function openAgreement(then){
+  openSheet('<h2>User agreement</h2><p>Emissions-system changes are for off-road, competition and export use. You are responsible for how and where the vehicle is used, and for doing the matching hardware work.</p><p class="lbl">Accepting applies to this device.</p><div style="display:flex;gap:10px;margin-top:10px"><button class="ghost" id="agNo">Cancel</button><button class="primary" id="agYes" style="flex:1">I accept</button></div>');
+  $("agNo").onclick=closeSheet;$("agYes").onclick=function(){S.agreed=true;store.set("agreed",true);closeSheet();then()};
+}
+function renderDetail(){
+  var p=P.PRESETS.find(function(x){return x.id===S.preset}),vals=slotValues(p.id),c=ctx(),ev=R.evaluate(c,vals);
+  var defs=R.settingsFor(c.engine,S.skill),tgls=R.togglesFor(c.engine,S.skill),segs=R.segmentsFor(c.engine,S.skill);
+  if(!S.seg||segs.indexOf(S.seg)<0)S.seg=segs[0];
+  var key=p.id+"|"+c.engine+"|"+S.seg+"|"+S.skill;
+  var d=$("detail");
+  if(builtKey!==key){
+    d.innerHTML='<button class="back" id="back">‹ All tunes</button><div class="dhead"><h1>'+esc(p.name)+'</h1><p>'+esc(p.feel)+'</p></div>'+
+      '<div class="levels" role="radiogroup" aria-label="Detail level" id="levels"></div>'+
+      '<div class="summary" id="sum"></div><div id="warns" aria-live="polite"></div><div class="tabs" role="tablist" id="tabs"></div><div class="cards" id="cards"></div><div class="cards" id="tgl"></div>'+
+      (S.skill==="expert"?'<section id="pro"></section>':'');
+    var lv=$("levels");[["simple","Simply","Quick sliders"],["standard","With detail","More sliders"],["expert","Technically","Open range + full tables"]].forEach(function(o){
+      var b=document.createElement("button");b.className="level";b.setAttribute("role","radio");b.setAttribute("aria-checked",S.skill===o[0]?"true":"false");
+      b.innerHTML='<b>'+o[1]+'</b><span>'+o[2]+'</span>';b.onclick=function(){S.skill=o[0];store.set("skill",o[0]);builtKey=null;render()};lv.appendChild(b)});
+    $("back").onclick=function(){history.back()};
+    var host=$("cards");
+    defs.filter(function(x){return x.segment===S.seg}).forEach(function(def){
+      var card=document.createElement("section");card.className="card";card.id="c-"+def.id;
+      var rg=R.rangeFor(def,S.skill);
+      card.innerHTML='<div class="head"><h3>'+esc(def.name)+(def.level&&def.level!=="simple"?' <small class="lvtag">'+(def.level==="expert"?"Pro":"Detail")+'</small>':'')+'</h3><span class="val"></span></div><div class="sl"><button class="step" aria-label="Decrease '+esc(def.name)+'">−</button><input type="range" aria-label="'+esc(def.name)+'" min="'+rg.min+'" max="'+rg.max+'" step="'+def.step+'"><button class="step" aria-label="Increase '+esc(def.name)+'">+</button></div>'+
+        (S.skill==="expert"&&(def.proMin!==undefined||def.proMax!==undefined)?'<p class="lbl" style="margin:0">Open range: '+esc(def.format(rg.min,ctx()))+' to '+esc(def.format(rg.max,ctx()))+'</p>':'')+'<div class="dyn"></div>';
+      var sb=card.querySelectorAll(".step"),inp=card.querySelector("input");
+      function set(nv){var v=Object.assign({},slotValues(p.id));v[def.id]=snapR(def,nv);saveSlot(p.id,v);render()}
+      sb[0].onclick=function(){set(slotValues(p.id)[def.id]-def.step)};sb[1].onclick=function(){set(slotValues(p.id)[def.id]+def.step)};
+      inp.addEventListener("input",function(){set(parseFloat(inp.value))});
+      host.appendChild(card)});
+    builtKey=key;
+  }
+  var cn=ev.counts,tot=cn.green+cn.yellow+cn.orange+cn.red,sum=$("sum");sum.style.setProperty("--z",ZC[ev.overall]);
+  sum.innerHTML='<div class="big"></div><div style="flex:1"><b>'+ZL[ev.overall]+'</b><span>'+cn.green+' safe · '+cn.yellow+' fine · '+cn.orange+' warning · '+cn.red+' danger — for this car, '+esc(S.fuel==="diesel"?"diesel":S.fuel+" fuel")+'</span><div class="meter">'+ORDER.map(function(z){return cn[z]?'<div style="width:'+(cn[z]/tot*100)+'%;background:'+ZC[z]+'"></div>':""}).join("")+'</div></div>';
+  $("warns").innerHTML=ev.warnings.map(function(w){return '<div class="warn" style="--z:'+ZC[w.level]+'"><b>'+esc(w.title)+'</b>'+esc(w.body)+'</div>'}).join("");
+  var t=$("tabs");t.innerHTML="";segs.forEach(function(g){var worst=defs.concat(tgls).filter(function(x){return x.segment===g}).map(function(x){return ev.results[x.id].zone}).sort(function(a,b){return ORDER.indexOf(b)-ORDER.indexOf(a)})[0];
+    var b=document.createElement("button");b.className="tab";b.setAttribute("role","tab");b.setAttribute("aria-selected",S.seg===g?"true":"false");b.style.setProperty("--z",ZC[worst]);b.innerHTML="<i></i>"+g;b.onclick=function(){S.seg=g;render()};t.appendChild(b)});
+  defs.filter(function(x){return x.segment===S.seg}).forEach(function(def){
+    var r=ev.results[def.id],v=vals[def.id],card=$("c-"+def.id);if(!card)return;
+    var exp=S.open[def.id]||r.zone==="orange"||r.zone==="red",inp=card.querySelector("input");
+    card.style.setProperty("--z",ZC[r.zone]);card.querySelector(".val").textContent=def.format(v,c);
+    if(document.activeElement!==inp||String(inp.value)!==String(v))inp.value=v;
+    inp.style.setProperty("--track",trackFor(def,r.bands));inp.setAttribute("aria-valuetext",def.format(v,c)+", "+ZL[r.zone]);
+    var dyn=card.querySelector(".dyn");
+    dyn.innerHTML='<span class="badge">'+ZL[r.zone]+'</span><p>'+esc(r.effect)+'</p><p>'+esc(r.headline)+'</p>'+(r.why?'<p class="why">'+esc(r.why)+'</p>':'')+
+      (r.otherFixes.length?'<p class="lbl" style="margin:8px 0 0">Fix it with other settings</p><div class="fixes ofx"></div>':'')+(r.advice.length?'<p class="lbl" style="margin:8px 0 0">Or adjust this one</p><div class="fixes afx"></div>':'')+
+      '<button class="link more">'+(exp?"Less":"What does this do?")+'</button>'+(exp?'<p class="why">'+esc(c.skill==="expert"?def.what.expert:def.what.simple)+'</p>'+(r.risks?'<div class="risk"><b>What can go wrong</b><p>'+esc(r.risks)+'</p></div>':''):'');
+    fillFixes(dyn.querySelector(".ofx"),r.otherFixes,p);fillFixes(dyn.querySelector(".afx"),r.advice,p);
+    dyn.querySelector(".more").onclick=function(){S.open[def.id]=!exp;render()};
+  });
+  var th=$("tgl"),tl=tgls.filter(function(t){return t.segment===S.seg});
+  th.innerHTML=tl.length?'<h2 style="margin:6px 0 10px">Switches</h2>':'';
+  tl.forEach(function(t){var r=ev.results[t.id],on=R.isOn(t,vals),card=document.createElement("section");card.className="card";card.style.setProperty("--z",ZC[r.zone]);
+    card.innerHTML='<div class="tgl"><h3>'+esc(t.name)+(t.agreement?' <small class="lvtag">Agreement</small>':'')+'</h3><button class="sw" role="switch" aria-checked="'+on+'" aria-label="'+esc(t.name)+'"></button></div>'+
+      '<span class="badge">'+(on?"On":"Off")+(on===t.stock?" · factory":"")+'</span><p>'+esc(r.headline)+'</p>'+(r.why?'<p class="why">'+esc(r.why)+'</p>':'')+
+      (r.risks?'<div class="risk"><b>What can go wrong</b><p>'+esc(r.risks)+'</p></div>':'')+
+      (r.otherFixes.length?'<p class="lbl" style="margin:8px 0 0">Other settings that cover it</p><div class="fixes ofx"></div>':'')+
+      (r.advice.length?'<p class="lbl" style="margin:8px 0 0">Or undo it</p><div class="fixes afx"></div>':'')+
+      '<p class="why">'+esc(c.skill==="expert"?t.what.expert:t.what.simple)+'</p>';
+    card.querySelector(".sw").onclick=function(){doAction(p,{kind:"toggle",id:t.id,value:!on})};
+    fillFixes(card.querySelector(".ofx"),r.otherFixes,p);fillFixes(card.querySelector(".afx"),r.advice,p);th.appendChild(card)});
+  if(S.skill==="expert")renderPro(p);
+  $("dockNote").textContent=S.onCar===p.id?"This tune is on the car":(isEdited(p.id)?"Changes saved":"");
+  $("flashBtn").textContent="Flash "+p.name;
+}
+
+
+/* ---------- pro table editor (Technically level) ---------- */
+var PRO={cat:null,table:null,sel:null,anchor:null,range:false,diff:true,undo:[],q:""};
+function tblKey(pid){return "tables:"+S.car.key+":"+pid}
+function tblStore(pid){if(!S.tables)S.tables={};if(!S.tables[pid])S.tables[pid]=store.get(tblKey(pid),{});return S.tables[pid]}
+function baseGrid(t){return T.demoData(t)}
+function gridFor(pid,t){var st=tblStore(pid);return st[t.id]||baseGrid(t)}
+function saveGrid(pid,t,g){var st=tblStore(pid);st[t.id]=g;store.set(tblKey(pid),st)}
+function stepFor(t){return t.decimals===0?(t.max-t.min>500?10:1):t.decimals===1?0.5:Math.pow(10,-t.decimals)*(t.decimals>=3?5:1)}
+function fmtN(t,v){return Number(v).toFixed(t.decimals)}
+function heat(t,v,lo,hi){var f=hi===lo?.5:(v-lo)/(hi-lo);var h=220-200*f;return "hsl("+h.toFixed(0)+" 55% "+(38+10*(1-Math.abs(f-.5)*2)).toFixed(0)+"%)"}
+function renderPro(p){
+  var host=$("pro");if(!host)return;
+  var tables=T.tablesFor(S.car.ecu,S.car.engine!=="na_petrol");
+  if(!tables.length){
+    var prof=E.ECU_PROFILES.find(function(x){return x.id===S.car.ecu});
+    host.innerHTML='<h2>Pro tables</h2><div class="card"><p><b>'+esc(prof.manufacturer+" "+prof.family)+'</b> table map isn’t loaded yet.</p><p class="why">Full tables appear for each ECU family once its definition is added. The Ford Barra (Spanish Oak) map is built from your HP Tuners file.</p><button class="fix" id="toBarra">Open the Barra demo car</button></div>';
+    $("toBarra").onclick=function(){S.carKey="fg";store.set("car","fg");S.view="home";history.back();connect()};return}
+  var cats=[];tables.forEach(function(t){if(cats.indexOf(t.category)<0)cats.push(t.category)});
+  if(!PRO.cat||cats.indexOf(PRO.cat)<0)PRO.cat=cats[0];
+  var list=tables.filter(function(t){return PRO.q?(t.name+" "+t.category).toLowerCase().indexOf(PRO.q.toLowerCase())>=0:t.category===PRO.cat});
+  if(!PRO.table||!tables.some(function(t){return t.id===PRO.table}))PRO.table=list[0]&&list[0].id;
+  var t=tables.find(function(x){return x.id===PRO.table});
+  var all={};tables.forEach(function(x){all[x.id]=gridFor(p.id,x)});
+  var g=all[t.id],base=baseGrid(t),flags=T.checkTable(t,g,{all:all,turbo:S.car.engine!=="na_petrol"});
+  var flat=[].concat.apply([],g),lo=Math.min.apply(null,flat),hi=Math.max.apply(null,flat);
+  var edited=T.diffCount(g,base),flagCount=[].concat.apply([],flags).filter(Boolean).length;
+  var focusSearch=document.activeElement&&document.activeElement.id==="proSearch";
+  var h='<h2>Pro tables <small class="lbl" style="font-family:Barlow">'+tables.length+' tables · '+esc(E.ECU_PROFILES.find(function(x){return x.id===S.car.ecu}).family)+'</small></h2>'+
+    '<div class="probar"><input id="proSearch" type="search" placeholder="Search tables" value="'+esc(PRO.q)+'"><div class="chips" id="proCats"></div></div>'+
+    '<div class="prolayout"><nav class="tlist" id="tlist"></nav><div class="teditor">'+
+    '<div class="thead"><div><h3>'+esc(t.name)+'</h3><p class="lbl" style="margin:2px 0">'+esc(t.unit)+(t.rows?' · rows: '+esc(t.rows.name)+(t.rows.unit?' ('+esc(t.rows.unit)+')':''):'')+(t.cols?' · columns: '+esc(t.cols.name):'')+'</p></div>'+
+    '<div class="tbadges">'+(t.provenance==="file"?'<span class="tag live">From your file</span>':'<span class="tag">Platform table · confirm vs your file</span>')+(t.realData||t.realValue!==undefined?'<span class="tag live">Real values</span>':'<span class="tag demo">Demo values</span>')+(t.hpId?'<span class="tag">HPT #'+t.hpId+'</span>':'')+'</div></div>'+
+    (t.note?'<p class="why" style="margin:4px 0 8px">'+esc(t.note)+'</p>':'')+
+    '<div class="toolbar" id="tools"></div>'+
+    '<div class="gridwrap"><table class="tgrid" id="tgrid"></table></div>'+
+    '<p class="lbl" id="tinfo"></p></div></div>';
+  host.innerHTML=h;
+  var ps=$("proSearch");ps.oninput=function(){PRO.q=ps.value;PRO.table=null;renderPro(p)};if(focusSearch){ps.focus();ps.setSelectionRange(ps.value.length,ps.value.length)}
+  var pc=$("proCats");cats.forEach(function(cn){pc.appendChild(chip(cn,!PRO.q&&PRO.cat===cn,function(){PRO.q="";PRO.cat=cn;PRO.table=null;PRO.sel=null;renderPro(p)}))});
+  var tl=$("tlist");list.forEach(function(x){var b=document.createElement("button");b.className="titem";b.setAttribute("aria-current",x.id===t.id?"true":"false");
+    var xd=T.diffCount(gridFor(p.id,x),baseGrid(x));b.innerHTML='<span>'+esc(x.name)+'</span><small>'+(x.realData?"● real, from your file":"platform · demo")+(xd?' · '+xd+' edited':'')+'</small>';
+    b.onclick=function(){PRO.table=x.id;PRO.sel=null;PRO.undo=[];renderPro(p)};tl.appendChild(b)});
+  // toolbar
+  var tools=$("tools"),st=stepFor(t);
+  function op(label,title,fn,needSel){var b=document.createElement("button");b.className="tool";b.textContent=label;b.title=title;b.setAttribute("aria-label",title);
+    b.disabled=needSel!==false&&!PRO.sel;b.onclick=function(){var ng=fn();if(ng){PRO.undo.push(g);saveGrid(p.id,t,ng);render()}};tools.appendChild(b)}
+  op("−"+st,"Subtract "+st,function(){return T.addSel(t,g,PRO.sel,-st)});
+  op("+"+st,"Add "+st,function(){return T.addSel(t,g,PRO.sel,st)});
+  op("−1%","Scale down 1%",function(){return T.scaleSel(t,g,PRO.sel,-1)});
+  op("+1%","Scale up 1%",function(){return T.scaleSel(t,g,PRO.sel,1)});
+  op("Set…","Set value",function(){var v=prompt("Set selected cells to ("+t.unit+")");if(v===null||v===""||isNaN(+v))return null;return T.setSel(t,g,PRO.sel,+v)});
+  op("Smooth","Smooth selection",function(){return T.smoothSel(t,g,PRO.sel)});
+  op("Interpolate","Interpolate between corners",function(){return T.interpolateSel(t,g,PRO.sel)});
+  op("Copy","Copy selection",function(){var s=PRO.sel,r0=Math.min(s.r0,s.r1),r1=Math.max(s.r0,s.r1),c0=Math.min(s.c0,s.c1),c1=Math.max(s.c0,s.c1),out=[];
+    for(var r=r0;r<=r1;r++)out.push(g[r].slice(c0,c1+1).join("\t"));try{navigator.clipboard.writeText(out.join("\n"));toast("Copied")}catch(e){toast("Copy not available")}return null});
+  op("Paste","Paste from spreadsheet",function(){try{navigator.clipboard.readText().then(function(txt){var s=PRO.sel,r0=Math.min(s.r0,s.r1),c0=Math.min(s.c0,s.c1),rows=txt.trim().split(/\r?\n/).map(function(l){return l.split(/\t|,/).map(Number)});
+      var ng=g.map(function(row,r){return row.map(function(v,c){var x=rows[r-r0]&&rows[r-r0][c-c0];return x!==undefined&&!isNaN(x)?+Math.min(t.max,Math.max(t.min,x)).toFixed(t.decimals):v})});PRO.undo.push(g);saveGrid(p.id,t,ng);render();toast("Pasted")})}catch(e){toast("Paste not available")}return null});
+  op("Undo","Undo",function(){return PRO.undo.length?PRO.undo.pop():null},false);
+  tools.lastChild.onclick=function(){if(PRO.undo.length){saveGrid(p.id,t,PRO.undo.pop());render()}};tools.lastChild.disabled=!PRO.undo.length;
+  op("Revert","Revert table to base file",function(){return base},false);
+  var rb=document.createElement("button");rb.className="tool"+(PRO.range?" on":"");rb.textContent="Range select";rb.setAttribute("aria-pressed",PRO.range?"true":"false");rb.onclick=function(){PRO.range=!PRO.range;PRO.anchor=PRO.range&&PRO.sel?{r:PRO.sel.r0,c:PRO.sel.c0}:null;renderPro(p)};tools.appendChild(rb);
+  var db=document.createElement("button");db.className="tool"+(PRO.diff?" on":"");db.textContent="Show changes";db.setAttribute("aria-pressed",PRO.diff?"true":"false");db.onclick=function(){PRO.diff=!PRO.diff;renderPro(p)};tools.appendChild(db);
+  // grid
+  var tg=$("tgrid"),html="";
+  if(t.cols){html+='<thead><tr><th class="corner">'+esc(t.rows?t.rows.unit||t.rows.name:"")+' \\ '+esc(t.cols.unit||t.cols.name)+'</th>'+t.cols.values.map(function(v){return '<th>'+v+'</th>'}).join("")+'</tr></thead>'}
+  html+='<tbody>'+g.map(function(row,r){return '<tr>'+(t.rows?'<th>'+t.rows.values[r]+'</th>':'<th>'+esc(t.unit)+'</th>')+row.map(function(v,c){
+    var sel=PRO.sel&&r>=Math.min(PRO.sel.r0,PRO.sel.r1)&&r<=Math.max(PRO.sel.r0,PRO.sel.r1)&&c>=Math.min(PRO.sel.c0,PRO.sel.c1)&&c<=Math.max(PRO.sel.c0,PRO.sel.c1);
+    var f=flags[r][c],ch=PRO.diff&&v!==base[r][c];
+    return '<td data-r="'+r+'" data-c="'+c+'" tabindex="-1" class="'+(sel?"sel ":"")+(ch?"chg ":"")+(f?"f-"+f.level:"")+'" style="background:'+heat(t,v,lo,hi)+'"'+(f?' title="'+esc(f.note)+'"':'')+'>'+fmtN(t,v)+'</td>'}).join("")+'</tr>'}).join("")+'</tbody>';
+  tg.innerHTML=html;
+  tg.onclick=function(e){var td=e.target.closest("td");if(!td)return;var r=+td.dataset.r,c=+td.dataset.c;
+    if(PRO.range&&PRO.anchor){PRO.sel={r0:PRO.anchor.r,c0:PRO.anchor.c,r1:r,c1:c};PRO.anchor=null}else{PRO.sel={r0:r,c0:c,r1:r,c1:c};PRO.anchor=PRO.range?{r:r,c:c}:null}renderPro(p)};
+  // drag-select with mouse/pen
+  var drag=null;tg.onpointerdown=function(e){var td=e.target.closest("td");if(!td||e.pointerType==="touch"||PRO.range)return;drag={r:+td.dataset.r,c:+td.dataset.c,moved:false}};
+  tg.onpointerover=function(e){if(!drag)return;var td=e.target.closest("td");if(!td)return;var r=+td.dataset.r,c=+td.dataset.c;if(r===drag.r&&c===drag.c&&!drag.moved)return;
+    drag.moved=true;var s={r0:drag.r,c0:drag.c,r1:r,c1:c};
+    [].forEach.call(tg.querySelectorAll("td"),function(x){var rr=+x.dataset.r,cc=+x.dataset.c;x.classList.toggle("sel",rr>=Math.min(s.r0,s.r1)&&rr<=Math.max(s.r0,s.r1)&&cc>=Math.min(s.c0,s.c1)&&cc<=Math.max(s.c0,s.c1))});drag.sel=s};
+  window.onpointerup=function(){if(drag&&drag.moved&&drag.sel){PRO.sel=drag.sel;PRO.anchor=null;drag=null;setTimeout(function(){renderPro(p)},0)}else drag=null};
+  tg.addEventListener("click",function(e){if(e.detail===0)return;},true);
+  var info=$("tinfo"),selTxt="";
+  if(PRO.sel){var s=PRO.sel,n=(Math.abs(s.r1-s.r0)+1)*(Math.abs(s.c1-s.c0)+1),fv=flags[s.r0][s.c0];selTxt=n+" cell"+(n>1?"s":"")+" selected"+(n===1?": "+fmtN(t,g[s.r0][s.c0])+" "+t.unit+" (base "+fmtN(t,base[s.r0][s.c0])+")":"")+(fv?" — "+fv.note:"")+". "}
+  renderSettings(p);
+  info.textContent=selTxt+(edited?edited+" cells changed from base. ":"Matches base file. ")+(flagCount?flagCount+" cells flagged.":"")+(PRO.range?(PRO.anchor?" Tap the opposite corner.":" Range select on: tap a corner, then the opposite corner."):" Tip: drag across cells, or turn on Range select.");
+}
+
+
+var PS={q:"",open:{}};
+function setKey(pid){return "settings:"+S.car.key+":"+pid}
+function renderSettings(p){
+  var list=T.settingsListFor(S.car.ecu);var host=$("proSettings");
+  if(!host){host=document.createElement("section");host.id="proSettings";$("pro").appendChild(host)}
+  if(!list.length){host.innerHTML="";return}
+  var edits=store.get(setKey(p.id),{}),focusId=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.sid:null;
+  var q=PS.q.toLowerCase(),groups={};list.forEach(function(it,i){if(q&&(it.name+" "+it.group).toLowerCase().indexOf(q)<0)return;(groups[it.group]=groups[it.group]||[]).push([it,i])});
+  var changed=Object.keys(edits).length;
+  var h='<h2>Settings <small class="lbl" style="font-family:Barlow">'+list.length+' values read from your file'+(changed?' · '+changed+' changed':'')+'</small></h2>'+
+    '<input id="setSearch" class="setsearch" type="search" placeholder="Search settings (e.g. rev, fan, DFCO, wastegate)" value="'+esc(PS.q)+'">';
+  Object.keys(groups).sort().forEach(function(g){var open=q||PS.open[g];
+    h+='<details class="sgroup"'+(open?' open':'')+' data-g="'+esc(g)+'"><summary><b>'+esc(g)+'</b><span>'+groups[g].length+'</span></summary><div class="srows">'+
+    groups[g].map(function(x){var it=x[0],i=x[1],v=edits[i]!==undefined?edits[i]:it.value,num=typeof it.value==="number",ch=edits[i]!==undefined;
+      return '<label class="srow'+(ch?' chg':'')+'"><span class="sname">'+esc(it.name)+(ch?'<small>file: '+esc(it.value)+'</small>':'')+'</span>'+
+        (num?'<input data-sid="'+i+'" inputmode="decimal" value="'+esc(v)+'">':'<select data-sid="'+i+'">'+["Enabled","Disabled","Enable","Disable","Fitted","Single",String(it.value)].filter(function(o,j,a){return a.indexOf(o)===j&&(o===String(it.value)||/abled|able$|Fitted/.test(String(it.value)))}).map(function(o){return '<option'+(o===String(v)?' selected':'')+'>'+esc(o)+'</option>'}).join("")+'</select>')+
+        '<span class="sunit">'+esc(it.unit)+'</span></label>'}).join("")+'</div></details>'});
+  host.innerHTML=h;
+  var ss=$("setSearch");ss.oninput=function(){PS.q=ss.value;renderSettings(p);var n=$("setSearch");n.focus();n.setSelectionRange(n.value.length,n.value.length)};
+  [].forEach.call(host.querySelectorAll("details"),function(d){d.ontoggle=function(){PS.open[d.dataset.g]=d.open}});
+  [].forEach.call(host.querySelectorAll("[data-sid]"),function(el){el.onchange=function(){var i=+el.dataset.sid,it=list[i],e=store.get(setKey(p.id),{});
+    var nv=typeof it.value==="number"?parseFloat(el.value):el.value;if(typeof it.value==="number"&&isNaN(nv)){toast("Enter a number");return}
+    if(nv===it.value)delete e[i];else e[i]=nv;store.set(setKey(p.id),e);toast("Saved");renderSettings(p)}});
+}
+
+/* ---------- flash flow ---------- */
+function openSheet(html){$("sheet").innerHTML=html;$("scrim").classList.add("open");var f=$("sheet").querySelector("button,input");f&&f.focus()}
+function closeSheet(){$("scrim").classList.remove("open")}
+$("scrim").onclick=function(e){if(e.target===$("scrim"))closeSheet()};
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()});
+var pulled={};
+function openFlash(){
+  var p=P.PRESETS.find(function(x){return x.id===S.preset}),ev=R.evaluate(ctx(),slotValues(p.id));
+  var needsPull=p.needsPull||ev.counts.orange+ev.counts.red>0;
+  var ready=S.conn==="on"&&S.backup>=100,pullOk=!needsPull||pulled[p.id];
+  openSheet('<h2>Flash '+esc(p.name)+'</h2><ul class="steps">'+
+    '<li>'+st(S.conn==="on")+'<span>Car connected: '+esc(S.car.title)+'</span></li>'+
+    '<li>'+st(S.backup>=100,S.backup<100)+'<span>Stock file backed up (you can always go back)</span></li>'+
+    '<li>'+st(pullOk)+'<span>'+(needsPull?(pulled[p.id]?'Full-throttle pull logged and passed':'Needs a logged full-throttle pull first (knock, mixture, temperature)'):'Mild tune: no pull log needed')+'</span></li>'+
+    '</ul>'+(needsPull&&!pulled[p.id]?'<button class="ghost" id="pullBtn" style="width:100%">Log a pull now</button>':'')+
+    '<div class="field" style="margin-top:14px"><label for="confirm">Type FLASH to confirm</label><input id="confirm" autocomplete="off" autocapitalize="characters"'+(ready&&pullOk?'':' disabled')+'></div>'+
+    '<div style="display:flex;gap:10px;margin-top:10px"><button class="ghost" id="cancel">Cancel</button><button class="primary" id="go" style="flex:1" disabled>Flash to car</button></div>');
+  $("cancel").onclick=closeSheet;
+  var pb=$("pullBtn");if(pb)pb.onclick=function(){pb.disabled=true;var n=0;(function t(){n+=20;pb.textContent=n<100?"Logging pull… "+n+"%":"Checking…";if(n<100)setTimeout(t,300);else setTimeout(function(){pulled[p.id]=true;openFlash()},500)})()};
+  var ci=$("confirm");ci.oninput=function(){$("go").disabled=ci.value.trim().toUpperCase()!=="FLASH"};
+  $("go").onclick=function(){runFlash(p)};
+}
+function runFlash(p){
+  openSheet('<h2>Flashing '+esc(p.name)+'</h2><p>Keep the ignition on and the phone nearby.</p><div class="bar" style="width:100%;height:10px"><div id="fb" style="width:0%"></div></div><p id="fs" class="lbl" style="margin-top:8px">Sending to receiver…</p>');
+  var n=0,stages=[[30,"Sending to receiver…"],[45,"Checksum matched"],[95,"Writing to ECU…"],[100,"Verifying…"]];
+  (function t(){n+=2;$("fb").style.width=n+"%";var s=stages.find(function(x){return n<=x[0]});$("fs").textContent=s?s[1]:"";
+    if(n<100)setTimeout(t,70);else setTimeout(function(){S.onCar=p.id;store.set("oncar:"+S.car.key,p.id);
+      openSheet('<h2>'+esc(p.name)+' is on the car</h2><p>The receiver wrote the tune and verified it. Turn the ignition off for 10 seconds, then start the car.</p><button class="primary" id="done" style="width:100%">Done</button>');
+      $("done").onclick=function(){closeSheet();render()}},400)})();
+}
+
+/* ---------- settings / edit vehicle ---------- */
+function openEditCar(){
+  var car=S.car,prof=E.profilesForPackage(S.pkg);
+  openSheet('<h2>Vehicle details</h2><p class="lbl">Read automatically from the car. Change anything that’s wrong.</p>'+
+    '<div class="field"><label>Vehicle</label><input value="'+esc(car.title)+'" id="ecTitle"></div>'+
+    '<div class="field"><label>Engine type</label><select id="ecEng">'+[["na_petrol","Petrol"],["turbo_petrol","Turbo petrol"],["turbo_diesel","Turbo diesel"]].map(function(o){return '<option value="'+o[0]+'"'+(o[0]===car.engine?' selected':'')+'>'+o[1]+'</option>'}).join("")+'</select></div>'+
+    '<div class="field"><label>ECU</label><select id="ecEcu">'+prof.map(function(p){return '<option value="'+p.id+'"'+(p.id===car.ecu?' selected':'')+'>'+esc(p.manufacturer+" "+p.family)+'</option>'}).join("")+'</select></div>'+
+    '<p class="lbl" style="margin-top:14px">Demo: try a different car</p><div class="chips" id="demoCars"></div>'+
+    '<div style="display:flex;gap:10px;margin-top:10px"><button class="ghost" id="cancel">Cancel</button><button class="primary" id="save" style="flex:1">Save</button></div>');
+  var dc=$("demoCars");DEMO_CARS.forEach(function(c){dc.appendChild(chip(c.title,c.key===S.car.key,function(){S.carKey=c.key;store.set("car",c.key);closeSheet();connect()}))});
+  $("cancel").onclick=closeSheet;
+  $("save").onclick=function(){var eng=$("ecEng").value;S.car=Object.assign({},S.car,{title:$("ecTitle").value,engine:eng,ecu:$("ecEcu").value});
+    if(eng==="turbo_diesel")S.fuel="diesel";else if(S.fuel==="diesel")S.fuel="98";S.slots={};closeSheet();toast("Saved");render()};
+}
+$("settingsBtn").onclick=function(){
+  openSheet('<h2>Settings</h2><p class="lbl">Explain things</p><div class="chips" id="sk"></div><p class="lbl" style="margin-top:14px">Package (demo)</p><div class="chips" id="pk"></div><div style="margin-top:14px"><button class="primary" id="ok" style="width:100%">Done</button></div>');
+  var sk=$("sk");[["simple","Simply"],["standard","With detail"],["expert","Technically"]].forEach(function(o){sk.appendChild(chip(o[1],S.skill===o[0],function(){S.skill=o[0];store.set("skill",o[0]);builtKey=null;render();$("settingsBtn").onclick()}))});
+  var pk=$("pk");E.PACKAGES.forEach(function(o){pk.appendChild(chip(o.name,S.pkg===o.id,function(){S.pkg=o.id;store.set("pkg",o.id);$("settingsBtn").onclick()}))});
+  $("ok").onclick=closeSheet};
+$("flashBtn").onclick=openFlash;
+$("resetBtn").onclick=function(){delete S.slots[S.preset];store.set(slotKey(),S.slots);toast("Back to "+P.PRESETS.find(function(x){return x.id===S.preset}).name+" defaults");render()};
+
+function render(){
+  var home=S.view==="home";$("home").hidden=!home;$("detail").hidden=home;$("dock").hidden=home;
+  if(home)renderHome();else renderDetail();
+}
+connect();
+</script>
+</body>
+</html>
