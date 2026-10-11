@@ -1,0 +1,9 @@
+{
+  "_comment": "OS-ID -> known-good definition. One REAL entry below, verified against an actual .hpt tune file (not guessed) — everything else in this index is still future work: populating more real OS-IDs from RomRaider's XDF repo, TunerPro's library, PCM Hammer's known-OS table, and further HP Tuners-covered platforms.",
+  "HACCKG6": {
+    "source_tool": "HP Tuners VCM Editor",
+    "definition_path": null,
+    "verified": true,
+    "note": "HP Tuners is proprietary/closed-format — it matches OS-ID against its own database rather than an open XDF file, so there is no local definition file to point to. 'verified' here means: confirmed real, from an actual tune (2006 Ford Australia Barra I6 ECM, 'Spanish Oak 1024K' hardware, VIN-matched, fitted to a Nissan Patrol swap), not that a file exists at definition_path. TuningAgent should open this OS-ID with --editor hptuners."
+  }
+}

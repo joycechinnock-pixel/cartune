@@ -1,0 +1,29 @@
+{
+  "generated_by": "CarTune Map Input Console",
+  "profile": "Sport",
+  "values": {
+    "power_stage": "Sport",
+    "afr_cruise": "14.7",
+    "afr_wot": "12.6",
+    "spark_wot": "+2.0",
+    "spark_partthrottle": "+1.0",
+    "shift_wot_rpm": "6200",
+    "shift_partthrottle_rpm": "3400",
+    "line_pressure": "+15%",
+    "tcc_lockup_rpm": "1800",
+    "afm_dod": "disabled",
+    "traction_threshold": "reduced",
+    "launch_rev": "N/A",
+    "rev_limiter_rpm": "6600"
+  },
+  "segments_touched": ["Fuel Calibration", "Engine Calibration", "Speed Calibration", "EBCM (separate module)"],
+  "ebcm_fields": ["traction_threshold"],
+  "requires_dyno_log": true,
+  "capability_checks": [
+    { "field": "shift_wot_rpm", "checked": false, "found": null },
+    { "field": "line_pressure", "checked": false, "found": null },
+    { "field": "tcc_lockup_rpm", "checked": false, "found": null },
+    { "field": "traction_threshold", "checked": false, "found": null }
+  ],
+  "note": "Power stage is beyond 'Day Use' — per the build sheet, this needs a live dyno pull with knock/AFR/coolant logged before you trust it. cartune_orchestrator.py's Validator will refuse to approve a flash for this spec without a --dyno-log CSV."
+}
