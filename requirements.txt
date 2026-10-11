@@ -1,0 +1,11 @@
+# Runtime dependency for cartune_orchestrator.py.
+#
+# The orchestrator itself is stdlib-only by design — everything else it
+# imports (argparse, subprocess, json, threading, urllib, ...) ships with
+# Python. This one package is the exception, and it's itself optional:
+# every agent that touches it (DiagnosticsAgent's Calibration-ID read,
+# PidCaptureAgent's rpm/coolant_c read) degrades honestly to `None`
+# instead of crashing if it isn't installed or no adapter answers.
+#
+# Install it if you want those two real reads working:
+obd>=0.7.1  # python-obd — standard OBD-II PID access (SAE J1979)
