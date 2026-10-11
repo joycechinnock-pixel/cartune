@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CarTune OS — Setup Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Titillium+Web:wght@400;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --bg-weave: #0e1013;
+    --panel: #16181c;
+    --panel2: #1e2126;
+    --border: #2b2f36;
+    --border-hot: #3a3f47;
+    --text: #e9edf2;
+    --muted: #8a93a3;
+    --amber: #ff7a1a;
+    --amber-dim: #b85a12;
+    --red: #ff2d4d;
+    --green: #39e991;
+    --cyan: #35d0e0;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-body: 'Titillium Web', sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at 15% 0%, rgba(255,122,26,.06), transparent 45%),
+      var(--bg);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-head);
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+    color: var(--text);
+  }
+
+  p { margin: 0 0 1em; max-width: 68ch; }
+  p:last-child { margin-bottom: 0; }
+
+  a { color: var(--amber); text-decoration: none; border-bottom: 1px solid rgba(255,122,26,.4); }
+  a:hover { border-bottom-color: var(--amber); }
+
+  code, .cmd {
+    font-family: var(--font-mono);
+    font-size: .92em;
+    background: #0e1013;
+    border: 1px solid var(--border);
+    color: var(--amber);
+    padding: .15em .45em;
+    border-radius: 4px;
+  }
+
+  pre.cmd-block {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    background: #0e1013;
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber-dim);
+    color: var(--text);
+    padding: 14px 16px;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0 0 1em;
+  }
+  pre.cmd-block .prompt { color: var(--muted); user-select: none; }
+  pre.cmd-block .comment { color: var(--muted); }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan);
+    flex-shrink: 0;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 28px 80px; }
+
+  /* ---------------- Masthead / cover ---------------- */
+  .masthead {
+    position: relative;
+    padding: 56px 28px 40px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #121417 0%, #0a0b0d 100%);
+    overflow: hidden;
+  }
+  .masthead::before {
+    content: "";
+    position: absolute; inset: 0 0 auto 0; height: 4px;
+    background: repeating-linear-gradient(90deg, var(--amber) 0 14px, transparent 14px 20px);
+    opacity: .7;
+  }
+  .masthead-inner { max-width: 980px; margin: 0 auto; }
+  .masthead .kicker {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+  }
+  .masthead h1 {
+    font-size: clamp(38px, 6vw, 58px);
+    letter-spacing: .01em;
+    line-height: 1.02;
+  }
+  .masthead .tagline {
+    font-family: var(--font-body);
+    font-size: 18px;
+    color: var(--muted);
+    margin-top: 14px;
+    max-width: 56ch;
+  }
+  .masthead .meta-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 26px;
+  }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border-hot);
+    background: var(--panel2);
+    color: var(--muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip.warn { color: var(--red); border-color: rgba(255,45,77,.4); background: rgba(255,45,77,.08); }
+  .chip.ok { color: var(--green); border-color: rgba(57,233,145,.35); background: rgba(57,233,145,.07); }
+
+  /* ---------------- Sections ---------------- */
+  section { padding: 52px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  section .section-head { margin-bottom: 24px; }
+  section h2 {
+    font-size: 28px;
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: .01em;
+  }
+  section .lede { color: var(--muted); font-size: 17px; max-width: 62ch; margin-top: 10px; }
+
+  /* ---------------- What it does: pipeline strip ---------------- */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0;
+    margin-top: 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .pipeline .stage {
+    padding: 18px 14px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    position: relative;
+  }
+  .pipeline .stage:last-child { border-right: none; }
+  .pipeline .stage:last-child .dot { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .pipeline .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--amber); box-shadow: 0 0 8px var(--amber);
+    margin: 0 auto 10px;
+  }
+  .pipeline .stage-name {
+    font-family: var(--font-head); font-weight: 700; font-size: 14px;
+    text-transform: uppercase; letter-spacing: .02em;
+  }
+  .pipeline .stage-desc {
+    font-family: var(--font-mono); font-size: 11px; color: var(--muted);
+    margin-top: 6px; line-height: 1.4;
+  }
+  .pipeline-arrow-row {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 11px; color: var(--border-hot);
+    padding: 4px 10px 0;
+  }
+
+  /* ---------------- Two-option comparison ---------------- */
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 28px;
+  }
+  @media (max-width: 760px) { .options { grid-template-columns: 1fr; } }
+
+  .option-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--amber-dim);
+    border-radius: 8px;
+    padding: 22px 22px 24px;
+    display: flex;
+    flex-direction: column;
+  }
+  .option-card.recommended { border-top-color: var(--amber); }
+  .option-card .option-label {
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted); margin-bottom: 6px;
+  }
+  .option-card h3 { font-size: 22px; }
+  .option-card .badge-row { margin: 10px 0 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .option-card .badge {
+    font-family: var(--font-mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: .05em; padding: 3px 8px; border-radius: 3px;
+    background: rgba(255,122,26,.12); color: var(--amber); border: 1px solid rgba(255,122,26,.35);
+  }
+  .option-card p.blurb { color: var(--muted); font-size: 14.5px; }
+
+  .steps { list-style: none; margin: 18px 0 0; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+    font-size: 14.5px;
+  }
+  .steps li:first-child { border-top: none; }
+  .steps li::before {
+    content: counter(step);
+    font-family: var(--font-mono); font-weight: 600; font-size: 13px;
+    color: var(--amber);
+    background: #0e1013;
+    border: 1px solid var(--border-hot);
+    width: 24px; height: 24px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .steps li .step-body strong { font-family: var(--font-head); font-weight: 600; display: block; margin-bottom: 2px; }
+  .steps li .step-body span.note { color: var(--muted); font-size: 13px; }
+
+  /* ---------------- Callouts ---------------- */
+  .callout {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--cyan);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin: 22px 0;
+  }
+  .callout.danger { border-left-color: var(--red); }
+  .callout.warn { border-left-color: var(--amber); }
+  .callout.good { border-left-color: var(--green); }
+  .callout .callout-head {
+    font-family: var(--font-head); font-weight: 700; font-size: 14px;
+    text-transform: uppercase; letter-spacing: .04em;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .callout.danger .callout-head { color: var(--red); }
+  .callout.warn .callout-head { color: var(--amber); }
+  .callout.good .callout-head { color: var(--green); }
+  .callout .callout-head .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; box-shadow: 0 0 6px currentColor; }
+  .callout p { font-size: 14.5px; color: var(--text); max-width: none; }
+  .callout p:not(:last-child) { margin-bottom: .6em; }
+
+  /* ---------------- Tool table ---------------- */
+  table.tools { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+  table.tools thead th {
+    text-align: left; font-family: var(--font-head); text-transform: uppercase;
+    font-size: 12px; letter-spacing: .05em; color: var(--muted);
+    border-bottom: 1px solid var(--border-hot); padding: 8px 10px;
+  }
+  table.tools td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.tools tr:last-child td { border-bottom: none; }
+  table.tools td.name { font-family: var(--font-head); font-weight: 600; white-space: nowrap; }
+  table.tools td.note { color: var(--muted); font-size: 13px; }
+  .status-dot { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 12px; }
+  .status-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+  .status-dot.auto::before { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.auto { color: var(--green); }
+  .status-dot.manual::before { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .status-dot.manual { color: var(--amber); }
+  .status-dot.skip::before { background: var(--muted); }
+  .status-dot.skip { color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; }
+
+  /* ---------------- Status board ---------------- */
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 24px;
+  }
+  .board .light {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+  .board .light .lamp {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 8px;
+  }
+  .board .light .lamp::before { content: ""; width: 9px; height: 9px; border-radius: 50%; }
+  .board .light.tested .lamp { color: var(--green); }
+  .board .light.tested .lamp::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .board .light.untested .lamp { color: var(--amber); }
+  .board .light.untested .lamp::before { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .board .light.manual .lamp { color: var(--red); }
+  .board .light.manual .lamp::before { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .board .light p { font-size: 13.5px; color: var(--muted); margin: 0; }
+  .board .light strong { color: var(--text); }
+
+  footer {
+    padding: 40px 0 60px;
+    text-align: center;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+  footer .rev { margin-top: 6px; letter-spacing: .05em; }
+
+  ::selection { background: rgba(255,122,26,.3); color: var(--text); }
+
+  @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <div class="masthead-inner">
+      <div class="kicker">Setup &amp; Field Guide</div>
+      <h1>CarTune OS</h1>
+      <p class="tagline">An open-source vehicle tuning &amp; diagnostic platform — discover, sniff, diagnose, tune, validate, and flash, all through one guarded pipeline. This guide gets the software installed and explains what it actually does before you plug it into a car.</p>
+      <div class="meta-row">
+        <span class="chip warn">⚠ Modifies vehicle ECUs — read the safety notes below</span>
+        <span class="chip">Target: Ubuntu 24.04 LTS</span>
+        <span class="chip ok">41 automated tests passing</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ============ WHAT IT DOES ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">What this is</div>
+        <h2>One pipeline, guarded at every step</h2>
+        <p class="lede">CarTune OS wires together open-source CAN-bus, diagnostic, and ECU-tuning tools into a single guided sequence — plug in, scan, sniff, diagnose, tune, validate, flash, save, unplug. Every stage hands off to the next through a plain file you can open and read yourself.</p>
+      </div>
+
+      <div class="pipeline">
+        <div class="stage"><div class="dot"></div><div class="stage-name">Discover</div><div class="stage-desc">Scan the bus, read the VIN &amp; ECU list</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Sniff</div><div class="stage-desc">Capture live traffic against known signal definitions</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Diagnose</div><div class="stage-desc">Pull trouble codes &amp; the current calibration</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Tune</div><div class="stage-desc">Edit the map in a real tuning tool, by hand</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Validate</div><div class="stage-desc">Safety limits, dyno-log gate, human confirm</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Flash</div><div class="stage-desc">Write the new map, verify the checksum</div></div>
+        <div class="stage"><div class="dot"></div><div class="stage-name">Done</div><div class="stage-desc">Saved to history, bus torn down safely</div></div>
+      </div>
+
+      <div class="callout warn" style="margin-top:26px">
+        <div class="callout-head"><span class="dot"></span>The one rule that never bends</div>
+        <p>Nothing gets written to an ECU without a human confirming it — and anything beyond a "Day Use" power stage is refused outright unless a real dyno pull (knock, AFR, coolant) is attached. This isn't a setting you can turn off; it's built into the Validator stage itself.</p>
+      </div>
+    </section>
+
+    <!-- ============ BEFORE YOU START ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Before you start</div>
+        <h2>What you need on hand</h2>
+      </div>
+
+      <table class="tools" style="margin-top:8px">
+        <tbody>
+          <tr><td class="name" style="width:180px">A computer</td><td>Any machine that can boot Ubuntu 24.04 — from a USB stick or as a second OS. 32GB+ free disk space if dual-booting.</td></tr>
+          <tr><td class="name">A USB drive</td><td>32GB or larger, USB 3.0, if you're going with Option A below.</td></tr>
+          <tr><td class="name">A CAN adapter</td><td>CANable / candleLight, comma.ai panda, or similar SocketCAN-compatible interface. This is what actually plugs into the car's OBD‑II port.</td></tr>
+          <tr><td class="name">Internet access</td><td>Needed once, to download tools and definitions. Not needed while actually working on the car.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout danger" style="margin-top:26px">
+        <div class="callout-head"><span class="dot"></span>Safety first</div>
+        <p>This software talks directly to your vehicle's ECUs and can write new calibration data to them. A bad flash can leave a module unresponsive. Use the Live USB path (Option A) until you trust the workflow, keep the auto-saved snapshots this tool makes for you, and never skip the confirmation prompt because you're in a hurry.</p>
+      </div>
+    </section>
+
+    <!-- ============ OPTION A / B ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Choose your setup</div>
+        <h2>Option A: Live USB, or Option B: Dual-Boot</h2>
+        <p class="lede">Both run the exact same software. The difference is where Ubuntu lives — and how much commitment you're making to your machine.</p>
+      </div>
+
+      <div class="options">
+        <div class="option-card recommended">
+          <div class="option-label">Option A</div>
+          <h3>Live USB</h3>
+          <div class="badge-row"><span class="badge">Start here</span><span class="badge">Reversible</span></div>
+          <p class="blurb">Boots entirely from a USB stick. Zero risk to your existing Windows or Mac install — nothing touches your internal drive.</p>
+          <ol class="steps">
+            <li><div class="step-body"><strong>Flash Ubuntu to the USB drive</strong>Use <a href="https://rufus.ie" target="_blank" rel="noopener">Rufus</a> (Windows) or balenaEtcher, with the Ubuntu 24.04 LTS Desktop image.<span class="note"></span></div></li>
+            <li><div class="step-body"><strong>Turn on persistent storage</strong>Rufus offers a "persistent partition" option — set it to at least 4–8GB, so installed tools and your tune history survive a reboot.</div></li>
+            <li><div class="step-body"><strong>Boot from the USB stick</strong>Restart, tap F2 / F12 / Esc at power-on (varies by machine) to open the boot menu, and choose the USB drive.</div></li>
+            <li><div class="step-body"><strong>Choose "Try Ubuntu"</strong>You're now running Ubuntu in RAM plus your persistent partition — nothing on the internal disk was touched.</div></li>
+          </ol>
+        </div>
+
+        <div class="option-card">
+          <div class="option-label">Option B</div>
+          <h3>Dual-Boot</h3>
+          <div class="badge-row"><span class="badge">Once you trust it</span><span class="badge">Better I/O</span></div>
+          <p class="blurb">Installs Ubuntu alongside your current OS. Faster disk access for long CAN-FD logging sessions, and native storage for a growing tune-history archive.</p>
+          <ol class="steps">
+            <li><div class="step-body"><strong>Back up your data first</strong>Partitioning carries real risk to existing files — a full backup is not optional here.<span class="note"></span></div></li>
+            <li><div class="step-body"><strong>Shrink your existing partition</strong>Windows: Disk Management → Shrink Volume. Leave the freed space unallocated.</div></li>
+            <li><div class="step-body"><strong>Install Ubuntu into the free space</strong>Boot the same USB installer from Option A, choose "Install Ubuntu alongside Windows," and let it set up GRUB (the boot menu that lets you pick an OS at startup).</div></li>
+            <li><div class="step-body"><strong>Reboot and pick Ubuntu</strong>GRUB will offer both operating systems every time you start the machine. Keep Windows around for anything CarTune doesn't cover (TunerPro, some OEM tools).</div></li>
+          </ol>
+        </div>
+      </div>
+
+      <pre class="cmd-block"><span class="comment"># Either option, once you're at an Ubuntu desktop — this is the common setup:</span>
+<span class="prompt">$</span> sudo apt update
+<span class="prompt">$</span> sudo apt install -y can-utils python3-pip python3-venv git docker.io build-essential
+<span class="prompt">$</span> sudo modprobe gs_usb        <span class="comment"># driver for CANable / candleLight adapters</span></pre>
+    </section>
+
+    <!-- ============ INSTALLING ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Installing the tools</div>
+        <h2>One script, everything it can safely install</h2>
+        <p class="lede">Everything CarTune OS uses lives in one folder. There's a launcher you can double-click, and a terminal command that always works as a fallback.</p>
+      </div>
+
+      <div class="options" style="grid-template-columns: 1fr;">
+        <div class="option-card">
+          <div class="option-label">Easiest</div>
+          <h3>Double-click <code>CarTune-Install.desktop</code></h3>
+          <p class="blurb">Opens a terminal and runs the installer for you. The first time only, Ubuntu needs one extra click to trust it as a program rather than opening it as a text file:</p>
+          <ol class="steps">
+            <li><div class="step-body"><strong>Right-click the file → Properties</strong><span class="note">In the Files app (Nautilus), open the Permissions tab.</span></div></li>
+            <li><div class="step-body"><strong>Check "Allow executing file as program"</strong><span class="note">This is a one-time, per-file setting Ubuntu requires for anything you double-click and run.</span></div></li>
+            <li><div class="step-body"><strong>Double-click it</strong>A terminal opens and installs everything it can. It stays open at the end so you can read the summary.</div></li>
+          </ol>
+        </div>
+
+        <div class="option-card">
+          <div class="option-label">Always works</div>
+          <h3>Or just run it from a terminal</h3>
+          <p class="blurb">If double-clicking doesn't behave the way your particular desktop is configured, this does the identical thing:</p>
+          <pre class="cmd-block"><span class="prompt">$</span> cd CarTune          <span class="comment"># the folder you downloaded</span>
+<span class="prompt">$</span> chmod +x setup_tools.sh
+<span class="prompt">$</span> ./setup_tools.sh</pre>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:8px">
+        <div class="callout-head"><span class="dot"></span>Safe to re-run</div>
+        <p>Run it as many times as you like — already-installed tools are skipped or updated, not reinstalled from scratch, and one tool failing to build doesn't stop the rest.</p>
+      </div>
+
+      <h3 style="margin-top:36px; font-size:20px;">What actually gets installed</h3>
+      <div class="table-wrap">
+        <table class="tools">
+          <thead><tr><th>Tool</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td class="name">LinOLS</td><td><span class="status-dot auto">Installed</span></td><td class="note">Map editor — the one tool CarTune can currently open with a verified launch command.</td></tr>
+            <tr><td class="name">pyobd</td><td><span class="status-dot auto">Installed</span></td><td class="note">OBD‑II diagnostics.</td></tr>
+            <tr><td class="name">ddt4all</td><td><span class="status-dot auto">Installed</span></td><td class="note">UDS diagnostics / hidden config.</td></tr>
+            <tr><td class="name">odxtools</td><td><span class="status-dot auto">Installed</span></td><td class="note">ODX diagnostic-database parser, from PyPI.</td></tr>
+            <tr><td class="name">opendbc</td><td><span class="status-dot auto">Installed</span></td><td class="note">Crowdsourced CAN signal database.</td></tr>
+            <tr><td class="name">OpenVehicleDiag</td><td><span class="status-dot auto">Installed</span></td><td class="note">J2534 / SocketCAN diagnostics. Linux SocketCAN support is upstream-flagged as work in progress.</td></tr>
+            <tr><td class="name">LibreTune</td><td><span class="status-dot auto">Installed</span></td><td class="note">Aftermarket ECU tuning (Speeduino/rusEFI-class ECUs).</td></tr>
+            <tr><td class="name">EcuBus-Pro</td><td><span class="status-dot auto">Installed</span></td><td class="note">HIL / UDS test tooling, via its official <code>.deb</code> release.</td></tr>
+            <tr><td class="name">cabana</td><td><span class="status-dot auto">Installed</span></td><td class="note">CAN visualizer — pulled from its current home in the openpilot project.</td></tr>
+            <tr><td class="name">GenericDiagnosticTool</td><td><span class="status-dot manual">Manual</span></td><td class="note">Windows-only. Source is cloned for reference; grab a release build or run it under Wine.</td></tr>
+            <tr><td class="name">OVMS3</td><td><span class="status-dot manual">Manual</span></td><td class="note">EV telemetry firmware for a separate hardware module, not a desktop app.</td></tr>
+            <tr><td class="name">BlackFlag ECU</td><td><span class="status-dot skip">Not installed</span></td><td class="note">Windows-only, and the source repo didn't clear our own trust bar (see honest status below).</td></tr>
+            <tr><td class="name">HyperTuner</td><td><span class="status-dot skip">Not installed</span></td><td class="note">Nothing public to install yet — still pre-alpha upstream.</td></tr>
+            <tr><td class="name">Tune-Editor</td><td><span class="status-dot skip">No install needed</span></td><td class="note">Already a free hosted web app — nothing to download.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ============ RUNNING ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Using it</div>
+        <h2>The everyday commands</h2>
+      </div>
+
+      <pre class="cmd-block"><span class="comment"># See what setup_tools.sh actually managed to install here</span>
+<span class="prompt">$</span> python3 cartune_orchestrator.py --list-tools
+
+<span class="comment"># Check every tool for new upstream activity (safe, read-only, no car needed)</span>
+<span class="prompt">$</span> python3 cartune_orchestrator.py --check-updates
+
+<span class="comment"># Plug the CAN adapter into the car, then run the full pipeline</span>
+<span class="prompt">$</span> python3 cartune_orchestrator.py --vin AUTO
+
+<span class="comment"># See every saved tune for a specific vehicle</span>
+<span class="prompt">$</span> python3 cartune_orchestrator.py --list-history --vin &lt;your-vin&gt;
+
+<span class="comment"># Go back to a previous tune — still goes through the same safety gate</span>
+<span class="prompt">$</span> python3 cartune_orchestrator.py --revert &lt;version-id&gt; --vin &lt;your-vin&gt;</pre>
+
+      <p style="margin-top:18px; color:var(--muted); font-size:14.5px;">The actual map editing — deciding which cells to change and by how much — happens in <code>CarTune-Map-Input-Console.html</code>, a separate file you can open directly in any browser. It doesn't need the orchestrator running; export a <code>tune_spec.json</code> from it and hand that file to the command above with <code>--tune-spec</code>.</p>
+    </section>
+
+    <!-- ============ HONEST STATUS ============ -->
+    <section>
+      <div class="section-head">
+        <div class="eyebrow">Where this actually stands</div>
+        <h2>Tested, and not yet tested</h2>
+        <p class="lede">The build sheet doesn't pretend everything below has been run against a real car. Here's exactly what has and hasn't.</p>
+      </div>
+
+      <div class="board">
+        <div class="light tested">
+          <div class="lamp">Verified</div>
+          <p><strong>41 automated tests</strong> cover every piece of logic that doesn't need real hardware — the dyno-log safety gate, the tune-history snapshot/revert system, the update checker, and the tool-manifest resolution. All passing, no network required to run them.</p>
+        </div>
+        <div class="light untested">
+          <div class="lamp">Not yet run</div>
+          <p>Nobody has run <code>setup_tools.sh</code> against a live Ubuntu machine yet, or plugged the pipeline into a real CAN bus. It's been reviewed and syntax-checked, not field-tested.</p>
+        </div>
+        <div class="light manual">
+          <div class="lamp">Still manual</div>
+          <p>Only <strong>LinOLS</strong> has a verified real launch command. Every other tuning tool (RomRaider, TunerPro, PCM Hammer…) still needs its actual CLI confirmed against its own docs before CarTune can drive it directly.</p>
+        </div>
+      </div>
+
+      <div class="callout warn" style="margin-top:26px">
+        <div class="callout-head"><span class="dot"></span>Recommended first run</div>
+        <p>Do the first full pass on a car you're comfortable being without for a bit, with the Live USB option, and watch the terminal output the whole way through — especially the human-confirm prompt before anything gets flashed. Treat the very first snapshot it saves as your safety net, not a formality.</p>
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    Full architecture: <code>CarTune-OS-Design.md</code> &nbsp;·&nbsp; Handoff notes for future changes: <code>CLAUDE.md</code>
+    <div class="rev">CarTune OS — Setup Guide</div>
+  </footer>
+
+</body>
+</html>
