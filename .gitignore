@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated at runtime — never checked in
+cartune_sessions/
+vin_repos/
+community_tunes/
+.cartune_versions.json
+
+# Local tool installs (managed by setup_tools.sh, machine-specific)
+cartune_tools/

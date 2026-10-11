@@ -1,0 +1,9 @@
+{
+  "vin": "1G1ZE5ST9HF123456",
+  "read_at": "2026-07-15T09:30:00",
+  "dtcs": [
+    { "code": "P0300", "description": "Random/multiple cylinder misfire detected", "status": "pending" },
+    { "code": "P0171", "description": "System too lean (Bank 1)", "status": "stored" }
+  ],
+  "current_bin": "current.bin"
+}
