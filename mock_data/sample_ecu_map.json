@@ -1,0 +1,12 @@
+{
+  "vin": "1G1ZE5ST9HF123456",
+  "make": "Holden",
+  "model": "Commodore VE",
+  "year": 2010,
+  "engine": "L98 6.0L V8",
+  "ecus": [
+    { "name": "PCM", "address": "0x10", "part_number": "12647347" },
+    { "name": "EBCM", "address": "0x28", "part_number": "20937482" },
+    { "name": "BCM", "address": "0x40", "part_number": "92211045" }
+  ]
+}

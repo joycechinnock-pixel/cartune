@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=CarTune OS — Install Tools
+Comment=Runs setup_tools.sh in a terminal to install the CarTune tool inventory
+Exec=bash -c 'd="$(dirname "%k")"; cd "$d" && bash "$d/setup_tools.sh"; echo; read -p "Done — press Enter to close this window..."'
+Icon=utilities-terminal
+Terminal=true
+Categories=Utility;

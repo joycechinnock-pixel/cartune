@@ -1,0 +1,23 @@
+[
+  {
+    "id": "20260715-093000__initial_read_baseline",
+    "timestamp": "20260715-093000",
+    "title": "initial read baseline",
+    "file": "20260715-093000__initial_read_baseline.bin",
+    "sha256": "f161c2e0d37b8f43"
+  },
+  {
+    "id": "20260715-101200__Day_Use",
+    "timestamp": "20260715-101200",
+    "title": "Day Use",
+    "file": "20260715-101200__Day_Use.bin",
+    "sha256": "b8ae6da5dab375e5"
+  },
+  {
+    "id": "20260722-140500__Sport",
+    "timestamp": "20260722-140500",
+    "title": "Sport",
+    "file": "20260722-140500__Sport.bin",
+    "sha256": "42263e2391bcb1aa"
+  }
+]
