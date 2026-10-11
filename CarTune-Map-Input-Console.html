@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CARTUNE // Map Input Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --bg-weave: #0e1013;
+    --panel: #16181c;
+    --panel2: #1e2126;
+    --border: #2b2f36;
+    --border-hot: #3a3f47;
+    --text: #e9edf2;
+    --muted: #8a93a3;
+    --amber: #ff7a1a;
+    --amber-dim: #b85a12;
+    --red: #ff2d4d;
+    --green: #39e991;
+    --cyan: #35d0e0;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font-mono);
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 6px),
+      var(--bg);
+    color: var(--text);
+  }
+
+  /* ---------- header: instrument-cluster style ---------- */
+  header {
+    padding: 22px 28px 18px;
+    border-bottom: 2px solid var(--amber);
+    background: linear-gradient(180deg, #121417 0%, #0a0b0d 100%);
+    position: relative;
+  }
+  header::after {
+    content: "";
+    position: absolute; left: 0; right: 0; bottom: -2px; height: 2px;
+    background: repeating-linear-gradient(90deg, var(--amber) 0 14px, transparent 14px 20px);
+    opacity: .55;
+  }
+  .brandrow { display:flex; align-items:center; gap:12px; }
+  .flag {
+    width: 22px; height: 22px; flex: none; border-radius: 3px; overflow:hidden;
+    background:
+      conic-gradient(#e9edf2 90deg, #0a0b0d 90deg 180deg, #e9edf2 180deg 270deg, #0a0b0d 270deg);
+    background-size: 8px 8px;
+    border: 1px solid var(--border-hot);
+  }
+  header h1 {
+    margin: 0; font-family: var(--font-head); font-weight: 700; font-size: 26px;
+    letter-spacing: .04em; text-transform: uppercase; color: var(--text);
+  }
+  header h1 span { color: var(--amber); }
+  header .sub {
+    margin: 2px 0 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: .03em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  header p.desc { margin: 12px 0 0; color: var(--muted); font-size: 13px; max-width: 900px; line-height: 1.5; }
+
+  .uploadbar { display:flex; gap: 22px; margin-top: 14px; flex-wrap: wrap; }
+  .uploadbar label { font-size: 11px; color: var(--muted); display:flex; flex-direction:column; gap:5px; max-width: 400px; text-transform:uppercase; letter-spacing:.03em; }
+  .uploadbar input[type=file] { font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .upload-status { font-size: 11px; padding: 3px 7px; border-radius: 3px; background: var(--panel2); width: fit-content; border: 1px solid var(--border); text-transform:none; letter-spacing:0; }
+  .upload-status.checked-ok { color: var(--green); border-color: var(--green); }
+
+  /* ---------- layout ---------- */
+  .layout { display: grid; grid-template-columns: 230px 1fr 310px; gap: 0; min-height: calc(100vh - 140px); }
+  .profiles { border-right: 1px solid var(--border); padding: 18px 16px; overflow-y: auto; background: var(--bg-weave); }
+  main { padding: 20px 24px; overflow-y: auto; }
+  aside.diff { border-left: 1px solid var(--border); padding: 18px 16px; overflow-y:auto; background: var(--bg-weave); }
+
+  h2.rail-title, .segment h3, .panel h3 {
+    font-family: var(--font-head); text-transform: uppercase; letter-spacing: .06em;
+    font-weight: 700; margin: 0 0 12px; color: var(--text); font-size: 14px;
+    display:flex; align-items:center; gap:8px;
+  }
+  h2.rail-title::before, .panel h3::before {
+    content:""; width:8px; height:8px; border-radius:50%; background: var(--amber);
+    box-shadow: 0 0 8px var(--amber);
+  }
+
+  /* ---------- profile rail: like a gear selector ---------- */
+  .profile-btn {
+    display:block; width:100%; text-align:left; background: var(--panel);
+    border: 1px solid var(--border); border-left: 3px solid transparent; color: var(--text);
+    padding: 10px 12px; border-radius: 4px; margin-bottom: 7px; cursor: pointer;
+    font-family: var(--font-head); font-weight: 600; font-size: 14px; letter-spacing:.02em;
+    transition: border-color .12s, background .12s;
+  }
+  .profile-btn:hover { border-left-color: var(--amber-dim); background: var(--panel2); }
+  .profile-btn.active { border-left-color: var(--amber); background: #24180c; box-shadow: inset 0 0 0 1px rgba(255,122,26,.35); }
+  .profile-btn small {
+    display:block; margin-top:3px; font-family: var(--font-mono); font-weight: 400;
+    font-size: 10px; letter-spacing: 0; color: var(--muted); text-transform: none;
+  }
+  .profile-btn .est { color: var(--green); font-weight: 600; }
+
+  /* ---------- segment cards ---------- */
+  .segment {
+    background: var(--panel); border: 1px solid var(--border); border-top: 2px solid var(--amber-dim);
+    border-radius: 6px; padding: 16px 18px; margin-bottom: 16px;
+  }
+  .seg-tag { font-size: 10px; text-transform: uppercase; letter-spacing:.06em; color: var(--muted); margin: -8px 0 12px; font-family: var(--font-mono); }
+  .field { display:grid; grid-template-columns: 220px 1fr; gap: 10px; align-items:start; padding: 9px 0; border-top: 1px dashed var(--border); }
+  .field:first-of-type { border-top: none; }
+  .field label { font-family: var(--font-head); font-weight: 600; font-size: 14px; padding-top: 6px; letter-spacing:.01em; }
+  .field .ctrl input, .field .ctrl select {
+    width: 100%; background: #0e1013; border: 1px solid var(--border); color: var(--amber);
+    padding: 7px 8px; border-radius: 4px; font-size: 13px; font-family: var(--font-mono); font-weight: 600;
+  }
+  .field .ctrl select { color: var(--text); font-weight: 500; }
+  .support { font-size: 11px; color: var(--muted); margin-top: 5px; line-height:1.55; }
+  .support b { color: var(--text); }
+  .gap { color: var(--amber); }
+  .found-ok { color: var(--green); }
+  .found-bad { color: var(--red); }
+  .badge { display:inline-block; padding: 1px 7px; border-radius: 3px; font-size: 10px; margin-left: 8px; font-family: var(--font-mono); text-transform: none; letter-spacing:0; vertical-align: middle; }
+  .badge.ebcm { background: rgba(255,122,26,.14); color: var(--amber); border: 1px solid rgba(255,122,26,.4); }
+
+  /* ---------- diff / readout panel ---------- */
+  .diffrow { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--amber-dim); border-radius: 4px; padding: 9px 11px; margin-bottom: 8px; font-size: 12px; }
+  .diffrow .seg { color: var(--amber); font-size: 10px; text-transform: uppercase; letter-spacing:.05em; font-family: var(--font-mono); }
+  .diffrow .vals { color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+  .diffrow.warn { border-left-color: var(--red); }
+  .diffrow.warn .seg { color: var(--red); }
+  .empty { color: var(--muted); font-size: 12px; }
+
+  button.primary {
+    width:100%; background: linear-gradient(180deg, #ff8c33, var(--amber)); color:#160a02; border:none;
+    padding:12px; border-radius:5px; font-weight:700; cursor:pointer; font-size:13px;
+    font-family: var(--font-head); text-transform: uppercase; letter-spacing: .06em;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.secondary {
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border-hot);
+    padding: 8px 12px; border-radius: 4px; font-family: var(--font-head); font-weight:600;
+    text-transform: uppercase; letter-spacing: .04em; font-size: 12px; cursor:pointer;
+  }
+  button.secondary:hover { border-color: var(--amber-dim); color: var(--amber); }
+  .note { font-size: 11px; color: var(--muted); margin-top: 10px; line-height:1.5; }
+
+  /* ---------- panels: unrecognized vehicle / tune history ---------- */
+  .panel { background: var(--panel); border: 1px solid var(--border); border-top: 2px solid var(--cyan); border-radius: 6px; padding: 16px 18px; margin-bottom: 20px; }
+  .panel.history { border-top-color: var(--green); }
+  .panel h3::before { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+  .panel.history h3::before { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .grid2 { display:grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 10px; margin-bottom: 12px; }
+  .grid2 input { background: #0e1013; border: 1px solid var(--border); color: var(--text); padding: 8px; border-radius: 4px; font-size: 13px; font-family: var(--font-mono); }
+  .grid2 input::placeholder { color: #5a6270; }
+  .resultcard { background: #0e1013; border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; margin-bottom: 8px; font-size: 12px; }
+  .resultcard a { color: var(--cyan); text-decoration: none; font-weight: 600; }
+  .resultcard a:hover { text-decoration: underline; }
+  .resultcard .stars { color: var(--amber); font-size: 11px; }
+  .linkrow { display:flex; flex-wrap:wrap; gap:8px; margin-top: 10px; }
+  .linkrow a {
+    font-size: 11px; color: var(--text); background: var(--panel2); border: 1px solid var(--border-hot);
+    padding: 6px 10px; border-radius: 3px; text-decoration:none; text-transform:uppercase; letter-spacing:.03em;
+    font-family: var(--font-head); font-weight:600;
+  }
+  .linkrow a:hover { border-color: var(--cyan); color: var(--cyan); }
+  table.history { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  table.history th { text-align:left; color: var(--muted); font-size: 10px; text-transform:uppercase; letter-spacing:.04em; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  table.history td { padding: 7px 8px; border-bottom: 1px solid var(--border); font-family: var(--font-mono); }
+  table.history tr:hover td { background: var(--panel2); }
+  .copybtn { background: var(--panel2); border: 1px solid var(--border-hot); color: var(--green); padding: 4px 8px; border-radius: 3px; font-size: 11px; cursor:pointer; font-family: var(--font-mono); }
+  .copybtn:hover { border-color: var(--green); }
+
+  /* ---------- tab navigation ---------- */
+  .tabbar { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .tabbtn {
+    background:transparent; border:1px solid var(--border); border-bottom:none; color:var(--muted);
+    padding:9px 16px; border-radius:5px 5px 0 0; font-family:var(--font-head); font-weight:600;
+    text-transform:uppercase; letter-spacing:.04em; font-size:12px; cursor:pointer; position:relative; top:1px;
+  }
+  .tabbtn:hover { color:var(--text); }
+  .tabbtn.active { color:var(--amber); background:var(--panel); border-color:var(--border); border-bottom:1px solid var(--panel); }
+  .tabpanel { }
+
+  /* ---------- file inspector ---------- */
+  .panel.inspect { border-top-color: var(--red); }
+  .panel.inspect h3::before { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .typebadge { display:inline-block; padding: 3px 9px; border-radius: 3px; font-family: var(--font-head); font-weight:700;
+    text-transform: uppercase; letter-spacing:.04em; font-size: 11px; background: var(--panel2); border: 1px solid var(--border-hot); color: var(--cyan); }
+  .hexdump { background: #0e1013; border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; font-family: var(--font-mono);
+    font-size: 11px; line-height: 1.6; overflow-x: auto; white-space: pre; max-height: 260px; overflow-y: auto; color: var(--muted); }
+  .hexdump .off { color: var(--amber); }
+  .hexdump .asc { color: var(--green); }
+  .kv { display:grid; grid-template-columns: 160px 1fr; gap: 4px 10px; font-size: 12px; margin-bottom: 10px; }
+  .kv div:nth-child(odd) { color: var(--muted); text-transform:uppercase; letter-spacing:.03em; font-size:10px; padding-top:2px; }
+  .kv div:nth-child(even) { font-family: var(--font-mono); }
+  .sigtree { max-height: 320px; overflow-y: auto; }
+  .sigtree .msg { margin-bottom: 8px; }
+  .sigtree .msg-name { font-family: var(--font-head); font-weight:700; color: var(--cyan); font-size: 13px; }
+  .sigtree .sig { margin-left: 16px; font-size: 11px; color: var(--muted); }
+  .sigtree .sig b { color: var(--text); }
+  .usebtnrow { display:flex; gap:8px; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brandrow"><div class="flag"></div><h1>CAR<span>TUNE</span> // Map Input Console</h1></div>
+  <p class="sub">Fuel · Speed · Engine Calibration — one input surface, every tool, every field checked against your own files</p>
+  <p class="desc">One input surface for every parameter category the tools in your inventory (LinOLS, RomRaider, TunerPro, HyperTuner, LibreTune, Tune-Editor, PCM Hammer, Universal Patcher) can edit, pre-loaded with the calibration targets from your VE SS build sheet. Pick a profile or hand-edit fields, check what's actually writable by which tool, then export a <code>tune_spec.json</code> to hand to whichever editor covers the segment you're touching. This is a spec, not a flashable file — you still open your real base calibration in the matching tool.</p>
+  <div class="uploadbar">
+    <label>Upload your tool's XDF — checks Speed Calibration coverage for real, instead of guessing
+      <input type="file" id="xdfFile" accept=".xdf,.xml">
+      <span id="xdfStatus" class="upload-status">not checked</span>
+    </label>
+    <label>Upload an EBCM ODX/DBC signal list — checks whether traction/stability is reachable at all
+      <input type="file" id="ebcmFile" accept=".json,.dbc,.odx,.txt">
+      <span id="ebcmStatus" class="upload-status">not checked</span>
+    </label>
+  </div>
+</header>
+
+<div class="layout">
+
+  <div class="profiles">
+    <h2 class="rail-title">Build-sheet profiles</h2>
+    <div id="profileList"></div>
+  </div>
+
+  <main>
+    <div class="tabbar">
+      <button class="tabbtn active" data-tab="tuning" onclick="switchTab('tuning')">Tune Editor</button>
+      <button class="tabbtn" data-tab="vehicle" onclick="switchTab('vehicle')">Vehicle Lookup</button>
+      <button class="tabbtn" data-tab="inspect" onclick="switchTab('inspect')">Upload &amp; Inspect</button>
+      <button class="tabbtn" data-tab="saved" onclick="switchTab('saved')">Saved Tunes</button>
+    </div>
+
+    <div class="tabpanel" data-tabpanel="tuning">
+      <div id="segments"></div>
+    </div>
+
+    <div class="tabpanel" data-tabpanel="vehicle" style="display:none;">
+      <div class="panel" id="vehiclePanel">
+        <h3>Vehicle Not Recognized?</h3>
+        <p class="note" style="margin-top:-4px;margin-bottom:10px;">If Discovery came back with no VIN and no ECUs, don't guess — enter what you know and search for a way in. Tier 1 (GitHub) searches live, right here. Tier 2 opens real search results in a new tab for sites that don't allow this page to fetch them directly.</p>
+        <div class="grid2">
+          <input id="vMake" placeholder="Make (e.g. Holden)">
+          <input id="vModel" placeholder="Model (e.g. Commodore VE)">
+          <input id="vYear" placeholder="Year">
+          <input id="vEngine" placeholder="Engine (e.g. L98 6.0L)">
+          <input id="vPcm" placeholder="PCM part number (if known)">
+          <input id="vVin" placeholder="VIN (optional)">
+        </div>
+        <button class="secondary" onclick="vehicleSearch()">Search for definitions / support</button>
+        <div id="vehicleResults"></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" data-tabpanel="inspect" style="display:none;">
+      <div class="panel inspect" id="inspectPanel">
+        <h3>Upload &amp; Inspect a File</h3>
+        <p class="note" style="margin-top:-4px;margin-bottom:10px;">Got a file already — an XDF, DBC, ODX, a calibration .bin, a dyno CSV, a tune_spec.json, anything? Drop it here. This detects the type from its extension and contents and reads it right in the browser: DBC gets parsed into messages/signals, XDF/ODX get their table and diagnostic-service names extracted, CSV gets checked against the dyno-log columns the Validator gate needs, JSON gets identified and pretty-printed, and a raw calibration .bin gets a hex-dump preview. Binary calibration files can't be decoded into named tables without a matching XDF/OS-ID — that part still needs PCM Hammer/TunerPro/RomRaider.</p>
+        <input type="file" id="inspectFile">
+        <div id="inspectResult" style="margin-top:12px;"></div>
+      </div>
+    </div>
+
+    <div class="tabpanel" data-tabpanel="saved" style="display:none;">
+      <div class="panel history">
+        <h3>Saved Tunes</h3>
+        <p class="note" style="margin-top:-4px;margin-bottom:10px;">Every session auto-saves a baseline the moment it reads the ECU, before anything is touched, and again right before any flash. Connect your tune library folder once (the folder that contains <code>vin_repos/</code>) and this reads every vehicle's saved snapshots directly — no more hunting for <code>manifest.json</code> in the file browser. It remembers the folder for next time; you'll just get a quick permission prompt.</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
+          <button class="secondary" onclick="connectTuneFolder()">Connect Tune Library Folder</button>
+          <span id="folderStatus" class="upload-status">not connected</span>
+        </div>
+        <div id="savedTunesResult"></div>
+        <details style="margin-top:16px;">
+          <summary style="cursor:pointer;color:var(--muted);font-size:12px;">Browser doesn't support folder access? Load one manifest.json manually</summary>
+          <div class="grid2" style="margin-top:10px;">
+            <input id="hVin" placeholder="VIN (for the revert command)">
+            <label style="display:flex;flex-direction:column;gap:5px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;">
+              Load manifest.json
+              <input type="file" id="historyFile" accept=".json">
+            </label>
+          </div>
+          <div id="historyTable"></div>
+        </details>
+      </div>
+    </div>
+  </main>
+
+  <aside class="diff">
+    <h2 class="rail-title">Changed vs. Factory</h2>
+    <div id="diffList"><div class="empty">No changes yet.</div></div>
+    <div class="exportbar" style="margin-top:14px;">
+      <button class="primary" onclick="exportSpec()">Export tune_spec.json</button>
+      <div class="note">Segments touched are computed from the fields above, matching the GM E38/E67-style checksum split (Fuel / Speed / Engine / Engine-Diagnostic Calibration). Traction/stability is flagged separately — it lives in the EBCM, not the engine PCM.</div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// Field schema: one entry per tunable category, with which real tools
+// (from CarTune-OS-Design.md's inventory) can actually write it.
+// ---------------------------------------------------------------------------
+const FIELDS = [
+  { key: "power_stage", label: "Power stage", segment: "Overview", type: "select",
+    options: ["None (baseline)","ECU remap only","Stage 1","Stage 1–2 (+ intake/headers)","Stage 2–3 (+ launch control)","Stage 3 (+ cam/heads)"],
+    support: "Descriptive only — not itself written to any table." },
+
+  { key: "afr_cruise", label: "Cruise AFR target", segment: "Fuel Calibration", type: "number", step:"0.1",
+    support: "<b>LinOLS, TunerPro, HyperTuner, LibreTune, Tune-Editor, PCM Hammer</b> (GM E38/E67). RomRaider = Subaru/BMW only, not this platform. Universal Patcher only if a known patch exists for this OS ID." },
+
+  { key: "afr_wot", label: "WOT AFR target", segment: "Fuel Calibration", type: "number", step:"0.1",
+    support: "Same tool set as cruise AFR — same VE/fuel table." },
+
+  { key: "spark_wot", label: "WOT spark strategy", segment: "Engine Calibration", type: "select",
+    options: ["Factory conservative","Moderately advanced (+2–4°)","Advanced to knock-limit (+4–6°)","Conservative during hold, full on release","Complete rework (cam/head airflow change)"],
+    support: "<b>LinOLS, TunerPro, HyperTuner, LibreTune, Tune-Editor, PCM Hammer</b>. A 'complete rework' entry (Race stage) is a re-learn, not a single-cell edit — treat as its own tuning pass." },
+
+  { key: "spark_partthrottle", label: "Part-throttle spark", segment: "Engine Calibration", type: "select",
+    options: ["Factory","Advanced (efficiency)","Advanced (steady-state)","Softened (transient smoothing)","Softened (tip-in, loose surface)"],
+    support: "Same table/tools as WOT spark." },
+
+  { key: "shift_wot_rpm", label: "WOT upshift RPM", segment: "Speed Calibration", type: "number",
+    checkKeywords: ["shift","upshift","speed cal"],
+    support: "<b>TunerPro, PCM Hammer</b> if your XDF/definition includes transmission tables. Universal Patcher: known values only." },
+
+  { key: "shift_partthrottle_rpm", label: "Part-throttle upshift RPM", segment: "Speed Calibration", type: "number",
+    checkKeywords: ["shift","upshift","speed cal"],
+    support: "Same tool set as WOT upshift RPM." },
+
+  { key: "line_pressure", label: "Line pressure", segment: "Speed Calibration", type: "select",
+    options: ["Factory adaptive","Softened (light throttle)","Light / smooth","Lowest (comfort)","Moderate","Raised","High / firm","Maximum","N/A — manual gear hold"],
+    checkKeywords: ["line pressure","pressure control","pc solenoid"],
+    support: "Same tool set as shift schedule." },
+
+  { key: "tcc_lockup_rpm", label: "TCC lockup RPM", segment: "Speed Calibration", type: "select",
+    options: ["~1,200 (very early)","~1,400 (early)","~1,600","~1,800","~2,200 (late)","~2,500 (late, firm)","Disabled entirely","Locked/near-locked from launch"],
+    checkKeywords: ["tcc","torque converter","lockup"],
+    support: "Same tool set as shift schedule." },
+
+  { key: "afm_dod", label: "AFM / DOD range", segment: "Fuel Calibration", type: "select",
+    options: ["Factory (light cruise, <40% load)","Widened","Wide (factory-default retained)","Liberal, smoothed transitions","Retained (near-factory)","Disabled / reduced","Off","Off (often mechanically deleted)"],
+    support: "<b>LinOLS, TunerPro, HyperTuner, PCM Hammer</b>, or a known <b>Universal Patcher</b> AFM-disable patch — the fastest path if you just want it off." },
+
+  { key: "traction_threshold", label: "Traction / stability threshold", segment: "EBCM (separate module)", type: "select",
+    options: ["Factory tight — early intervention","Unchanged","Slightly loosened","Loosened","Loosened significantly","Off — staged 'drag mode'","Off — minimal","Fully disabled"],
+    ebcmCheck: ["yaw","slip","traction","stability","esc","ebcm"],
+    support: "Not reachable by any <i>engine</i>-tuning tool in this inventory — yaw/wheel-slip thresholds live in the EBCM. Needs its own UDS/ODX session via <b>odxtools / ddt4all / EcuBus-Pro</b>, and only if a definition for your EBCM exists.",
+    ebcm: true },
+
+  { key: "launch_rev", label: "Launch control / rev limiter", segment: "Engine Calibration", type: "select",
+    options: ["Standard rev limiter only","N/A","Optional soft launch assist","2-step hold, release on clutch/brake","2-step / anti-lag optional","Optional 2-step for RPM hold on brake"],
+    support: "<b>TunerPro, PCM Hammer, Universal Patcher</b> (known 2-step patches). RomRaider not applicable to this platform." },
+
+  { key: "rev_limiter_rpm", label: "Hard rev limiter / redline (rpm)", segment: "Engine Calibration", type: "number",
+    support: "Same tool set as launch control." },
+];
+
+// ---------------------------------------------------------------------------
+// Profiles, values transcribed directly from the VE SS build sheet.
+// ---------------------------------------------------------------------------
+const PROFILES = {
+  "Factory Standard": { est:"5.4s", v: {
+    power_stage:"None (baseline)", afr_cruise:14.7, afr_wot:12.9, spark_wot:"Factory conservative", spark_partthrottle:"Factory",
+    shift_wot_rpm:5150, shift_partthrottle_rpm:2000, line_pressure:"Factory adaptive", tcc_lockup_rpm:"~1,600",
+    afm_dod:"Factory (light cruise, <40% load)", traction_threshold:"Factory tight — early intervention",
+    launch_rev:"Standard rev limiter only", rev_limiter_rpm:6600 }},
+
+  "Economical": { est:"~5.6s", v: {
+    power_stage:"ECU remap only", afr_cruise:15.0, afr_wot:12.8, spark_wot:"Factory conservative", spark_partthrottle:"Advanced (efficiency)",
+    shift_wot_rpm:5150, shift_partthrottle_rpm:2200, line_pressure:"Softened (light throttle)", tcc_lockup_rpm:"~1,200 (very early)",
+    afm_dod:"Widened", traction_threshold:"Unchanged",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+
+  "Highway Driving": { est:"~5.5s", v: {
+    power_stage:"ECU remap only", afr_cruise:14.7, afr_wot:12.9, spark_wot:"Factory conservative", spark_partthrottle:"Advanced (steady-state)",
+    shift_wot_rpm:5150, shift_partthrottle_rpm:2800, line_pressure:"Light / smooth", tcc_lockup_rpm:"~1,400 (early)",
+    afm_dod:"Wide (factory-default retained)", traction_threshold:"Unchanged",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+
+  "Comfort": { est:"~5.5s", v: {
+    power_stage:"ECU remap only", afr_cruise:14.7, afr_wot:12.9, spark_wot:"Factory conservative", spark_partthrottle:"Softened (transient smoothing)",
+    shift_wot_rpm:2900, shift_partthrottle_rpm:2900, line_pressure:"Lowest (comfort)", tcc_lockup_rpm:"~1,400 (early)",
+    afm_dod:"Liberal, smoothed transitions", traction_threshold:"Unchanged",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+
+  "Day Use": { est:"~5.1s", v: {
+    power_stage:"Stage 1", afr_cruise:14.7, afr_wot:12.8, spark_wot:"Moderately advanced (+2–4°)", spark_partthrottle:"Factory",
+    shift_wot_rpm:4200, shift_partthrottle_rpm:2000, line_pressure:"Raised", tcc_lockup_rpm:"~1,800",
+    afm_dod:"Retained (near-factory)", traction_threshold:"Slightly loosened",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+
+  "Sport": { est:"~4.8s", v: {
+    power_stage:"Stage 1–2 (+ intake/headers)", afr_cruise:14.7, afr_wot:12.7, spark_wot:"Advanced to knock-limit (+4–6°)", spark_partthrottle:"Factory",
+    shift_wot_rpm:5500, shift_partthrottle_rpm:2000, line_pressure:"High / firm", tcc_lockup_rpm:"~2,200 (late)",
+    afm_dod:"Disabled / reduced", traction_threshold:"Loosened",
+    launch_rev:"Optional soft launch assist", rev_limiter_rpm:6600 }},
+
+  "Handling": { est:"~5.0s (not the goal)", v: {
+    power_stage:"Stage 1", afr_cruise:14.7, afr_wot:12.8, spark_wot:"Moderately advanced (+2–4°)", spark_partthrottle:"Factory",
+    shift_wot_rpm:5500, shift_partthrottle_rpm:2000, line_pressure:"High / firm", tcc_lockup_rpm:"~2,200 (late)",
+    afm_dod:"Off", traction_threshold:"Loosened significantly",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+
+  "Holeshot": { est:"~4.0–4.3s", v: {
+    power_stage:"Stage 2–3 (+ launch control)", afr_cruise:14.7, afr_wot:12.25, spark_wot:"Conservative during hold, full on release", spark_partthrottle:"Factory",
+    shift_wot_rpm:6200, shift_partthrottle_rpm:2000, line_pressure:"Maximum", tcc_lockup_rpm:"Locked/near-locked from launch",
+    afm_dod:"Off", traction_threshold:"Off — staged 'drag mode'",
+    launch_rev:"2-step hold, release on clutch/brake", rev_limiter_rpm:6600 }},
+
+  "Race": { est:"~4.1s", v: {
+    power_stage:"Stage 3 (+ cam/heads)", afr_cruise:14.7, afr_wot:12.4, spark_wot:"Complete rework (cam/head airflow change)", spark_partthrottle:"Factory",
+    shift_wot_rpm:6200, shift_partthrottle_rpm:2000, line_pressure:"Maximum", tcc_lockup_rpm:"~2,500 (late, firm)",
+    afm_dod:"Off (often mechanically deleted)", traction_threshold:"Off — minimal",
+    launch_rev:"2-step / anti-lag optional", rev_limiter_rpm:6600 }},
+
+  "Burnout": { est:"n/a — closed course", v: {
+    power_stage:"None (baseline)", afr_cruise:14.7, afr_wot:12.9, spark_wot:"Factory conservative", spark_partthrottle:"Factory",
+    shift_wot_rpm:0, shift_partthrottle_rpm:0, line_pressure:"N/A — manual gear hold", tcc_lockup_rpm:"Disabled entirely",
+    afm_dod:"Off", traction_threshold:"Fully disabled",
+    launch_rev:"Optional 2-step for RPM hold on brake", rev_limiter_rpm:6600 }},
+
+  "Off-Road / Loose Surface": { est:"~5.3s (not the goal)", v: {
+    power_stage:"Stage 1", afr_cruise:14.7, afr_wot:12.8, spark_wot:"Factory conservative", spark_partthrottle:"Softened (tip-in, loose surface)",
+    shift_wot_rpm:3500, shift_partthrottle_rpm:3500, line_pressure:"Moderate", tcc_lockup_rpm:"~1,600",
+    afm_dod:"Retained (near-factory)", traction_threshold:"Loosened",
+    launch_rev:"N/A", rev_limiter_rpm:6600 }},
+};
+
+let current = "Factory Standard";
+let values = {...PROFILES[current].v};
+const DAY_USE_OR_BELOW = new Set(["None (baseline)", "ECU remap only", "Stage 1"]);
+
+// ---------------------------------------------------------------------------
+// Real capability checks — null = not checked yet, array = parsed names.
+// ---------------------------------------------------------------------------
+let xdfTableNames = null;
+let ebcmSignalNames = null;
+
+document.getElementById("xdfFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  let names = [];
+  try {
+    const xml = new DOMParser().parseFromString(text, "application/xml");
+    if (xml.querySelector("parsererror")) throw new Error("not xml");
+    names = [...xml.getElementsByTagName("title")].map(t => t.textContent || "");
+    names = names.concat([...xml.querySelectorAll("[name]")].map(t => t.getAttribute("name") || ""));
+  } catch (err) {
+    names = [text];
+  }
+  xdfTableNames = names.map(n => n.toLowerCase()).filter(Boolean);
+  const status = document.getElementById("xdfStatus");
+  status.textContent = `checked — ${xdfTableNames.length} table/name entries found in "${file.name}"`;
+  status.className = "upload-status checked-ok";
+  renderAll();
+});
+
+document.getElementById("ebcmFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  let names = [];
+  try {
+    const j = JSON.parse(text);
+    names = Array.isArray(j) ? j.map(String) : Object.keys(j);
+  } catch {
+    names = text.split(/[\r\n,;]+/);
+  }
+  ebcmSignalNames = names.map(n => n.toLowerCase()).filter(Boolean);
+  const status = document.getElementById("ebcmStatus");
+  status.textContent = `checked — ${ebcmSignalNames.length} signal/DID names found in "${file.name}"`;
+  status.className = "upload-status checked-ok";
+  renderAll();
+});
+
+function liveSupport(f) {
+  if (f.checkKeywords) {
+    if (xdfTableNames === null) {
+      return f.support + ` <span class="gap">Upload your XDF above to confirm this for real — not guessed.</span>`;
+    }
+    const found = f.checkKeywords.some(k => xdfTableNames.some(n => n.includes(k)));
+    return f.support + (found
+      ? ` <span class="found-ok">&#10003; Found a matching table in your uploaded XDF — this field is writable there.</span>`
+      : ` <span class="found-bad">&#10007; No matching table found in your uploaded XDF — try a different tool or definition.</span>`);
+  }
+  if (f.ebcmCheck) {
+    if (ebcmSignalNames === null) {
+      return f.support + ` <span class="gap">Upload an EBCM ODX/DBC signal list above to check reachability for real.</span>`;
+    }
+    const found = f.ebcmCheck.some(k => ebcmSignalNames.some(n => n.includes(k)));
+    return f.support + (found
+      ? ` <span class="found-ok">&#10003; A matching signal exists in your uploaded definition — reachable via odxtools/ddt4all/EcuBus-Pro against the EBCM.</span>`
+      : ` <span class="found-bad">&#10007; No matching signal in your uploaded definition — still not reachable with what you have.</span>`);
+  }
+  return f.support;
+}
+
+function renderProfiles() {
+  const el = document.getElementById("profileList");
+  el.innerHTML = "";
+  Object.keys(PROFILES).forEach(name => {
+    const btn = document.createElement("button");
+    btn.className = "profile-btn" + (name === current ? " active" : "");
+    btn.innerHTML = `${name}<small>0–100: <span class="est">${PROFILES[name].est}</span></small>`;
+    btn.onclick = () => { current = name; values = {...PROFILES[name].v}; renderAll(); };
+    el.appendChild(btn);
+  });
+}
+
+function renderSegments() {
+  const segEl = document.getElementById("segments");
+  segEl.innerHTML = "";
+  const groups = {};
+  FIELDS.forEach(f => { (groups[f.segment] ||= []).push(f); });
+
+  Object.keys(groups).forEach(segName => {
+    const box = document.createElement("div");
+    box.className = "segment";
+    const isEbcm = groups[segName].some(f => f.ebcm);
+    box.innerHTML = `<h3>${segName}${isEbcm ? '<span class="badge ebcm">separate module</span>' : ''}</h3>
+      <div class="seg-tag">${segName === "Overview" ? "informational" : "calibration segment"}</div>`;
+    groups[segName].forEach(f => {
+      const row = document.createElement("div");
+      row.className = "field";
+      let ctrl;
+      if (f.type === "select") {
+        ctrl = `<select onchange="setVal('${f.key}', this.value)">` +
+          f.options.map(o => `<option ${o === values[f.key] ? "selected" : ""}>${o}</option>`).join("") +
+          `</select>`;
+      } else {
+        ctrl = `<input type="number" step="${f.step||1}" value="${values[f.key]}" onchange="setVal('${f.key}', this.value)">`;
+      }
+      row.innerHTML = `<label>${f.label}</label><div class="ctrl">${ctrl}<div class="support">${liveSupport(f)}</div></div>`;
+      box.appendChild(row);
+    });
+    segEl.appendChild(box);
+  });
+}
+
+function setVal(key, val) { values[key] = val; renderDiff(); }
+
+function renderDiff() {
+  const base = PROFILES["Factory Standard"].v;
+  const el = document.getElementById("diffList");
+  const changed = FIELDS.filter(f => String(values[f.key]) !== String(base[f.key]) && f.key !== "power_stage");
+
+  let banner = "";
+  if (!DAY_USE_OR_BELOW.has(values.power_stage)) {
+    banner = `<div class="diffrow warn">
+      <div class="seg">requires live logging</div>
+      <div>'${values.power_stage}' is beyond Day Use. The build sheet is explicit this needs a dyno pull with knock/AFR/coolant logged live — a static diff alone can't validate it. <b>cartune_orchestrator.py</b> won't approve a flash without a matching <code>--dyno-log</code> CSV.</div>
+    </div>`;
+  }
+
+  if (changed.length === 0) { el.innerHTML = banner || '<div class="empty">No changes vs. Factory.</div>'; return; }
+  el.innerHTML = banner + changed.map(f => `
+    <div class="diffrow">
+      <div class="seg">${f.segment}</div>
+      <div><b>${f.label}</b></div>
+      <div class="vals">${base[f.key]} &rarr; ${values[f.key]}</div>
+    </div>`).join("");
+}
+
+function renderAll() { renderProfiles(); renderSegments(); renderDiff(); }
+
+function exportSpec() {
+  const changedFields = FIELDS.filter(f => String(values[f.key]) !== String(PROFILES["Factory Standard"].v[f.key]) && f.key !== "power_stage");
+  const segmentsTouched = [...new Set(changedFields.map(f => f.segment))];
+  const requiresDynoLog = !DAY_USE_OR_BELOW.has(values.power_stage);
+
+  const capability_checks = changedFields
+    .filter(f => f.checkKeywords || f.ebcmCheck)
+    .map(f => ({
+      field: f.key,
+      checked: f.checkKeywords ? xdfTableNames !== null : ebcmSignalNames !== null,
+      found: f.checkKeywords
+        ? (xdfTableNames !== null ? f.checkKeywords.some(k => xdfTableNames.some(n => n.includes(k))) : null)
+        : (ebcmSignalNames !== null ? f.ebcmCheck.some(k => ebcmSignalNames.some(n => n.includes(k))) : null),
+    }));
+
+  const spec = {
+    generated_by: "CarTune Map Input Console",
+    profile: current,
+    values,
+    segments_touched: segmentsTouched,
+    ebcm_fields: changedFields.filter(f => f.ebcm).map(f => f.key),
+    requires_dyno_log: requiresDynoLog,
+    capability_checks,
+    note: requiresDynoLog
+      ? "Power stage is beyond 'Day Use' — per the build sheet, this needs a live dyno pull with knock/AFR/coolant logged before you trust it. cartune_orchestrator.py's Validator will refuse to approve a flash for this spec without a --dyno-log CSV."
+      : "This is a specification of intended changes, not a flashable binary. Apply these values inside the tool that supports the touched segment(s) (see per-field 'support' notes), against your own vehicle's exact base calibration/XDF/OS ID."
+  };
+  const blob = new Blob([JSON.stringify(spec, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "tune_spec.json";
+  a.click();
+}
+
+// ---------------------------------------------------------------------------
+// Vehicle Lookup panel — mirrors VehicleLookupAgent's two tiers client-side.
+// ---------------------------------------------------------------------------
+async function vehicleSearch() {
+  const make = document.getElementById("vMake").value.trim();
+  const model = document.getElementById("vModel").value.trim();
+  const year = document.getElementById("vYear").value.trim();
+  const engine = document.getElementById("vEngine").value.trim();
+  const pcm = document.getElementById("vPcm").value.trim();
+  const query = [make, model, year, engine, pcm].filter(Boolean).join(" ");
+  const resultsEl = document.getElementById("vehicleResults");
+
+  if (!query) { resultsEl.innerHTML = '<p class="note">Enter at least make + model.</p>'; return; }
+  resultsEl.innerHTML = '<p class="note">Searching GitHub live…</p>';
+
+  const preparedLinks = {
+    "pcmhacking.net forums": `https://pcmhacking.net/forums/search.php?terms=${encodeURIComponent(query)}`,
+    "RomRaider forum": `https://www.romraider.com/forum/search.php?terms=${encodeURIComponent(query)}`,
+    "TunerPro XDF library": `https://www.google.com/search?q=${encodeURIComponent("site:tunerpro.net xdf " + query)}`,
+    "General web": `https://www.google.com/search?q=${encodeURIComponent(query + " ECU tune definition OR xdf OR odx")}`,
+  };
+
+  let githubHtml = "";
+  try {
+    const q = encodeURIComponent(`${query} ecu OR tune OR xdf OR definition OR calibration`);
+    const resp = await fetch(`https://api.github.com/search/repositories?q=${q}&sort=stars&order=desc&per_page=6`);
+    const data = await resp.json();
+    const items = data.items || [];
+    githubHtml = items.length
+      ? items.map(it => `<div class="resultcard">
+          <a href="${it.html_url}" target="_blank" rel="noopener">${it.full_name}</a>
+          <span class="stars">&#9733; ${it.stargazers_count}</span>
+          <div style="color:var(--muted);margin-top:3px;">${(it.description || "").slice(0,140)}</div>
+        </div>`).join("")
+      : '<p class="note">No GitHub hits for this exact query — try fewer terms, or use the links below.</p>';
+  } catch (err) {
+    githubHtml = '<p class="note">GitHub search failed (offline, or rate-limited) — use the links below instead.</p>';
+  }
+
+  const linksHtml = `<div class="linkrow">${Object.entries(preparedLinks)
+    .map(([name, url]) => `<a href="${url}" target="_blank" rel="noopener">${name} &#8599;</a>`).join("")}</div>`;
+
+  resultsEl.innerHTML = `
+    <div class="note" style="color:var(--amber);margin:10px 0;">Nothing here is verified against your PCM — treat every result as a lead to review, not a file to flash.</div>
+    ${githubHtml}
+    ${linksHtml}`;
+}
+
+// ---------------------------------------------------------------------------
+// Tab navigation — Tune Editor / Vehicle Lookup / Upload & Inspect / Saved Tunes.
+// ---------------------------------------------------------------------------
+function switchTab(name) {
+  document.querySelectorAll(".tabpanel").forEach(p => {
+    p.style.display = (p.dataset.tabpanel === name) ? "" : "none";
+  });
+  document.querySelectorAll(".tabbtn").forEach(b => {
+    b.classList.toggle("active", b.dataset.tab === name);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Saved Tunes tab — connects to the tune library folder once (File System
+// Access API), walks every VIN subfolder's tune_history/manifest.json, and
+// lists every saved snapshot across every vehicle. No manual file hunting.
+// The folder handle is remembered in IndexedDB so it doesn't need re-picking
+// next session — only a quick permission re-grant.
+// ---------------------------------------------------------------------------
+let tuneFolderHandle = null;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("cartune-console", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("kv");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(key, val) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("kv", "readwrite");
+    tx.objectStore("kv").put(val, key);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGet(key) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction("kv", "readonly");
+    const req = tx.objectStore("kv").get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function connectTuneFolder() {
+  const statusEl = document.getElementById("folderStatus");
+  if (!window.showDirectoryPicker) {
+    statusEl.textContent = "not supported in this browser — use the manual loader below";
+    return;
+  }
+  try {
+    tuneFolderHandle = await window.showDirectoryPicker();
+    idbSet("tuneFolderHandle", tuneFolderHandle).catch(() => {});
+    await loadSavedTunes();
+  } catch (err) {
+    // user cancelled the picker — nothing to report
+  }
+}
+
+async function loadSavedTunes() {
+  const statusEl = document.getElementById("folderStatus");
+  const resultEl = document.getElementById("savedTunesResult");
+  if (!tuneFolderHandle) { statusEl.textContent = "not connected"; return; }
+
+  try {
+    let perm = await tuneFolderHandle.queryPermission({ mode: "read" });
+    if (perm !== "granted") perm = await tuneFolderHandle.requestPermission({ mode: "read" });
+    if (perm !== "granted") { statusEl.textContent = "permission denied — click Connect to retry"; return; }
+  } catch (err) {
+    statusEl.textContent = "could not access folder — click Connect to retry";
+    return;
+  }
+
+  statusEl.textContent = `scanning "${tuneFolderHandle.name}"…`;
+  statusEl.className = "upload-status";
+
+  const allEntries = [];
+  for await (const [vinName, vinHandle] of tuneFolderHandle.entries()) {
+    if (vinHandle.kind !== "directory") continue;
+    try {
+      const historyDir = await vinHandle.getDirectoryHandle("tune_history");
+      const manifestFile = await historyDir.getFileHandle("manifest.json");
+      const file = await manifestFile.getFile();
+      const manifest = JSON.parse(await file.text());
+      manifest.forEach(entry => allEntries.push({ ...entry, vin: vinName }));
+    } catch (err) {
+      // this folder isn't a VIN repo, or has no tune_history yet — skip quietly
+    }
+  }
+
+  const vehicleCount = new Set(allEntries.map(e => e.vin)).size;
+  statusEl.textContent = `connected — ${allEntries.length} saved tune(s) across ${vehicleCount} vehicle(s)`;
+  statusEl.className = "upload-status checked-ok";
+  renderSavedTunes(allEntries);
+}
+
+function renderSavedTunes(entries) {
+  const el = document.getElementById("savedTunesResult");
+  if (!entries.length) {
+    el.innerHTML = '<p class="note">No saved tunes found yet — the folder either has no vin_repos-style subfolders, or none have been read/flashed yet.</p>';
+    return;
+  }
+  entries.sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
+  el.innerHTML = `<table class="history">
+    <tr><th>VIN</th><th>Timestamp</th><th>Title</th><th>Checksum</th><th></th></tr>
+    ${entries.map(e => `
+      <tr>
+        <td>${escapeHtml(e.vin)}</td>
+        <td>${escapeHtml(String(e.timestamp))}</td>
+        <td>${escapeHtml(String(e.title))}</td>
+        <td>${escapeHtml(String(e.sha256 || ""))}</td>
+        <td><button class="copybtn" onclick="copyRevertFor('${escapeHtml(e.vin)}','${escapeHtml(String(e.id))}')">Copy revert cmd</button></td>
+      </tr>`).join("")}
+  </table>`;
+}
+
+function copyRevertFor(vin, id) {
+  const cmd = `python3 cartune_orchestrator.py --revert ${id} --vin ${vin}`;
+  navigator.clipboard.writeText(cmd).then(() => alert("Copied:\n" + cmd));
+}
+
+// Try to silently restore a previously-connected folder on page load. If
+// permission is still granted, it loads with no click at all; otherwise it
+// waits for the user to hit Connect again (browsers require a user gesture
+// to re-request permission after a reload).
+(async function restoreTuneFolder() {
+  try {
+    const handle = await idbGet("tuneFolderHandle");
+    if (!handle) return;
+    tuneFolderHandle = handle;
+    const perm = await handle.queryPermission({ mode: "read" });
+    const statusEl = document.getElementById("folderStatus");
+    if (perm === "granted") {
+      await loadSavedTunes();
+    } else {
+      statusEl.textContent = `remembered "${handle.name}" — click Connect to re-grant access`;
+    }
+  } catch (err) {
+    // no stored handle, or IndexedDB unavailable — fine, user just connects manually
+  }
+})();
+
+// ---------------------------------------------------------------------------
+// Tune History fallback — loads a single manifest.json, offers a revert
+// command per row. Used when the File System Access API isn't available.
+// ---------------------------------------------------------------------------
+document.getElementById("historyFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  let manifest = [];
+  try { manifest = JSON.parse(await file.text()); } catch { manifest = []; }
+  renderHistory(manifest);
+});
+
+function renderHistory(manifest) {
+  const el = document.getElementById("historyTable");
+  if (!manifest.length) { el.innerHTML = '<p class="note">No entries — or the file did not parse as a manifest.json array.</p>'; return; }
+  el.innerHTML = `<table class="history">
+    <tr><th>Timestamp</th><th>Title</th><th>Checksum</th><th></th></tr>
+    ${manifest.map(entry => `
+      <tr>
+        <td>${entry.timestamp}</td>
+        <td>${entry.title}</td>
+        <td>${entry.sha256}</td>
+        <td><button class="copybtn" onclick="copyRevert('${entry.id}')">Copy revert cmd</button></td>
+      </tr>`).join("")}
+  </table>`;
+}
+
+function copyRevert(id) {
+  const vin = document.getElementById("hVin").value.trim() || "<vin>";
+  const cmd = `python3 cartune_orchestrator.py --revert ${id} --vin ${vin}`;
+  navigator.clipboard.writeText(cmd).then(() => alert("Copied:\n" + cmd));
+}
+
+// ---------------------------------------------------------------------------
+// Upload & Inspect — sniffs file type by extension + content signature, then
+// dispatches to a type-specific reader. Binary calibration files only ever
+// get a hex-dump preview here: turning them into named tables requires the
+// matching XDF/OS-ID, which is exactly what the header's XDF upload and this
+// panel's DBC/XDF/ODX readers are for.
+// ---------------------------------------------------------------------------
+document.getElementById("inspectFile").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const text = safeDecodeText(buf);
+  const type = detectFileType(file.name, text, buf);
+  renderInspect(file, type, text, buf);
+});
+
+function safeDecodeText(buf) {
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(buf);
+    return text;
+  } catch {
+    return null; // not valid UTF-8 text — treat as binary
+  }
+}
+
+function detectFileType(filename, text, buf) {
+  const ext = (filename.split(".").pop() || "").toLowerCase();
+  if (["xdf"].includes(ext)) return "xdf";
+  if (["dbc"].includes(ext)) return "dbc";
+  if (["odx", "odx-d", "odx-c", "odx-cs"].includes(ext)) return "odx";
+  if (["pdx"].includes(ext)) return "pdx";
+  if (["json"].includes(ext)) return "json";
+  if (["csv", "tsv"].includes(ext)) return "csv";
+  if (["bin", "hex", "rom", "cal"].includes(ext)) return "bin";
+  if (["txt", "log"].includes(ext)) return "text";
+
+  // Fall back to sniffing content when the extension doesn't tell us enough.
+  if (buf.length >= 4 && buf[0] === 0x50 && buf[1] === 0x4b) return "pdx"; // 'PK' zip signature
+  if (text) {
+    const head = text.trimStart().slice(0, 200);
+    if (head.startsWith("{") || head.startsWith("[")) return "json";
+    if (/^\s*BO_\s/m.test(text)) return "dbc";
+    if (/<XDFFORMAT|<XDFTABLE/i.test(text)) return "xdf";
+    if (/<ODX|<DIAG-LAYER-CONTAINER/i.test(text)) return "odx";
+    if (text.includes(",") && text.split("\n")[0].split(",").length > 1) return "csv";
+    return "text";
+  }
+  return "bin";
+}
+
+function renderInspect(file, type, text, buf) {
+  const el = document.getElementById("inspectResult");
+  const badge = `<span class="typebadge">${type}</span> <span style="color:var(--muted);font-size:11px;">${file.name} — ${buf.length.toLocaleString()} bytes</span>`;
+  let body = "";
+
+  try {
+    if (type === "xdf") body = renderXdfInspect(text);
+    else if (type === "dbc") body = renderDbcInspect(text);
+    else if (type === "odx") body = renderOdxInspect(text);
+    else if (type === "pdx") body = `<p class="note">This is a zipped ODX bundle (PDX). Reading a zip file in-browser needs a zip library this single-file tool deliberately doesn't depend on. Unzip it and drop the inner <code>.odx-d</code>/<code>.odx-c</code> file here instead, or read it directly with <b>odxtools</b> on the Linux side.</p>`;
+    else if (type === "json") body = renderJsonInspect(text);
+    else if (type === "csv") body = renderCsvInspect(text);
+    else if (type === "text") body = `<div class="hexdump">${escapeHtml(text.slice(0, 4000))}${text.length > 4000 ? "\n… (truncated)" : ""}</div>`;
+    else body = renderBinInspect(buf);
+  } catch (err) {
+    body = `<p class="note" style="color:var(--red);">Could not parse this as ${type}: ${err.message}. Showing a raw hex preview instead.</p>` + renderBinInspect(buf);
+  }
+
+  el.innerHTML = `<div style="margin-bottom:10px;">${badge}</div>${body}`;
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+}
+
+function renderBinInspect(buf) {
+  const rows = [];
+  const rowCount = Math.min(32, Math.ceil(buf.length / 16));
+  for (let r = 0; r < rowCount; r++) {
+    const off = r * 16;
+    const slice = buf.slice(off, off + 16);
+    const hex = [...slice].map(b => b.toString(16).padStart(2, "0")).join(" ").padEnd(47, " ");
+    const asc = [...slice].map(b => (b >= 32 && b < 127) ? String.fromCharCode(b) : ".").join("");
+    rows.push(`<span class="off">${off.toString(16).padStart(6, "0")}</span>  ${hex}  <span class="asc">${asc}</span>`);
+  }
+  const more = buf.length > rowCount * 16 ? `\n… ${(buf.length - rowCount * 16).toLocaleString()} more bytes` : "";
+  return `<p class="note">No matching XDF/OS-ID loaded, so this is a raw hex preview only — cell-level meaning needs the tool that reads this exact calibration format (PCM Hammer, TunerPro, RomRaider). If you have the matching XDF, upload it in the header above to cross-check field coverage.</p>
+    <div class="hexdump">${rows.join("\n")}${more}</div>`;
+}
+
+function renderXdfInspect(text) {
+  const xml = new DOMParser().parseFromString(text, "application/xml");
+  if (xml.querySelector("parsererror")) throw new Error("not well-formed XML");
+  const tableTitles = [...xml.querySelectorAll("XDFTABLE > title")].map(t => t.textContent.trim());
+  const constantTitles = [...xml.querySelectorAll("XDFCONSTANT > title")].map(t => t.textContent.trim());
+  const allNames = [...new Set([...tableTitles, ...constantTitles])];
+  xdfTableNames = allNames.map(n => n.toLowerCase()); // feeds the same live capability checks as the header uploader
+  renderAll();
+  return `<div class="kv">
+      <div>Tables</div><div>${tableTitles.length}</div>
+      <div>Constants</div><div>${constantTitles.length}</div>
+    </div>
+    <div class="hexdump">${allNames.slice(0, 60).join("\n")}${allNames.length > 60 ? `\n… ${allNames.length - 60} more` : ""}</div>
+    <div class="usebtnrow"><span class="note">Loaded — every field above now shows a real ✓/✗ against this XDF instead of a guess.</span></div>`;
+}
+
+function renderDbcInspect(text) {
+  const lines = text.split(/\r?\n/);
+  const messages = [];
+  let cur = null;
+  const msgRe = /^BO_\s+(\d+)\s+(\w+)\s*:\s*(\d+)\s+(\S+)/;
+  const sigRe = /^\s*SG_\s+(\w+)\s*:\s*(\d+)\|(\d+)@(\d)([+-])\s*\(([^,]+),([^)]+)\)\s*\[([^|]*)\|([^\]]*)\]\s*"([^"]*)"/;
+  for (const line of lines) {
+    const m = msgRe.exec(line);
+    if (m) { cur = { id: m[1], name: m[2], dlc: m[3], sender: m[4], sigs: [] }; messages.push(cur); continue; }
+    const s = sigRe.exec(line);
+    if (s && cur) { cur.sigs.push({ name: s[1], start: s[2], len: s[3], factor: s[6], offset: s[7], min: s[8], max: s[9], unit: s[10] }); }
+  }
+  if (!messages.length) throw new Error("no BO_/SG_ lines found");
+
+  ebcmSignalNames = messages.flatMap(m => [m.name, ...m.sigs.map(s => s.name)]).map(n => n.toLowerCase());
+  renderAll();
+
+  const tree = messages.slice(0, 30).map(m => `
+    <div class="msg"><div class="msg-name">${m.name} <span style="color:var(--muted);font-weight:400;">(id ${m.id}, ${m.dlc}B, ${m.sender})</span></div>
+      ${m.sigs.map(s => `<div class="sig"><b>${s.name}</b> — bit ${s.start}, ${s.len}b, ×${s.factor}${s.offset != "0" ? ` +${s.offset}` : ""}${s.unit ? ` ${s.unit}` : ""}</div>`).join("")}
+    </div>`).join("");
+
+  return `<div class="kv"><div>Messages</div><div>${messages.length}</div><div>Signals</div><div>${messages.reduce((a, m) => a + m.sigs.length, 0)}</div></div>
+    <div class="sigtree">${tree}${messages.length > 30 ? `<p class="note">… ${messages.length - 30} more messages</p>` : ""}</div>
+    <div class="usebtnrow"><span class="note">Loaded — the traction/stability field's EBCM reachability check above now runs against these signal names.</span></div>`;
+}
+
+function renderOdxInspect(text) {
+  const xml = new DOMParser().parseFromString(text, "application/xml");
+  if (xml.querySelector("parsererror")) throw new Error("not well-formed XML");
+  const services = [...xml.getElementsByTagName("DIAG-SERVICE")].map(n => n.querySelector("SHORT-NAME")?.textContent).filter(Boolean);
+  const dops = [...xml.getElementsByTagName("DATA-OBJECT-PROP")].map(n => n.querySelector("SHORT-NAME")?.textContent).filter(Boolean);
+  if (!services.length && !dops.length) throw new Error("no DIAG-SERVICE or DATA-OBJECT-PROP entries found");
+  return `<div class="kv"><div>Diag services</div><div>${services.length}</div><div>Data object props</div><div>${dops.length}</div></div>
+    <p class="note">Partial reading — full ODX semantics (request/response byte layout, unit conversions) are what <b>odxtools</b> is for. This just confirms what's in the file and its names.</p>
+    <div class="hexdump">${[...services, ...dops].slice(0, 60).join("\n")}</div>`;
+}
+
+function renderJsonInspect(text) {
+  const j = JSON.parse(text);
+  let kind = "Generic JSON";
+  if (j && j.generated_by === "CarTune Map Input Console") kind = "tune_spec.json (from this console)";
+  else if (Array.isArray(j) && j[0]?.sha256 && j[0]?.timestamp) kind = "tune_history manifest.json";
+  else if (j && "vin" in j && "ecus" in j) kind = "ecu_map.json (Discovery Agent output)";
+  else if (j && "dtcs" in j) kind = "dtc_report.json (Diagnostics Agent output)";
+  else if (j && "github_hits" in j) kind = "vehicle_lookup.json (Vehicle Lookup Agent output)";
+  const pretty = JSON.stringify(j, null, 2);
+  return `<div class="kv"><div>Recognized as</div><div>${kind}</div></div>
+    <div class="hexdump">${escapeHtml(pretty.slice(0, 4000))}${pretty.length > 4000 ? "\n… (truncated)" : ""}</div>`;
+}
+
+function renderCsvInspect(text) {
+  const delim = text.split("\n")[0].includes("\t") ? "\t" : ",";
+  const rows = text.trim().split(/\r?\n/).map(r => r.split(delim));
+  const headers = rows[0].map(h => h.trim().toLowerCase());
+  const data = rows.slice(1);
+
+  const required = ["rpm", "knock_retard_deg", "afr", "coolant_c"];
+  const missing = required.filter(c => !headers.includes(c));
+  const dynoReady = missing.length === 0;
+
+  const colStats = headers.map((h, i) => {
+    const vals = data.map(r => parseFloat(r[i])).filter(v => !isNaN(v));
+    if (!vals.length) return `${h}: non-numeric`;
+    return `${h}: min ${Math.min(...vals)}, max ${Math.max(...vals)}`;
+  });
+
+  return `<div class="kv"><div>Rows</div><div>${data.length}</div><div>Columns</div><div>${headers.length}</div>
+      <div>Dyno-log ready?</div><div style="color:${dynoReady ? "var(--green)" : "var(--amber)"}">${dynoReady ? "Yes — has rpm/knock_retard_deg/afr/coolant_c" : "No — missing: " + missing.join(", ")}</div></div>
+    <div class="hexdump">${colStats.join("\n")}</div>`;
+}
+
+renderAll();
+</script>
+
+</body>
+</html>

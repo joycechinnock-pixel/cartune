@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CarTune</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* Sunlight (light) tokens */
+:root{
+  --bg:#F3F1EC;--panel:#FFFFFF;--raise:#E7E4DC;--line:#C9C4B8;--text:#15191E;--dim:#555D66;--accent:#0A8F80;--accentInk:#FFFFFF;
+  --g:#1E8A52;--y:#A98A00;--o:#C25E08;--r:#C4262C;--tape:#E7E4DC;--needle:#15191E;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171C22;--panel:#20262E;--raise:#2A313B;--line:#3A4350;--text:#ECE8DF;--dim:#9AA3AE;--accent:#2FD3C0;--accentInk:#0C2522;
+    --g:#3DBE7A;--y:#E3C744;--o:#EF8A2D;--r:#E5575B;--tape:#11151A;--needle:#ECE8DF;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171C22;--panel:#20262E;--raise:#2A313B;--line:#3A4350;--text:#ECE8DF;--dim:#9AA3AE;--accent:#2FD3C0;--accentInk:#0C2522;
+  --g:#3DBE7A;--y:#E3C744;--o:#EF8A2D;--r:#E5575B;--tape:#11151A;--needle:#ECE8DF;color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font:17px/1.45 "Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:"Saira Condensed","Arial Narrow",system-ui,sans-serif;font-weight:700;letter-spacing:.01em;margin:0;line-height:1.05}
+h1{font-size:44px}h2{font-size:30px}h3{font-size:22px}
+.num{font-family:"Saira Condensed","Arial Narrow",sans-serif;font-variant-numeric:tabular-nums;font-weight:700}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:560px;margin:0 auto;padding:18px 18px 120px}
+.muted{color:var(--dim)}
+.small{font-size:14px}
+p{margin:6px 0}
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:60px;border-radius:14px;border:2px solid var(--line);background:var(--panel);padding:12px 18px;font-weight:700;font-size:18px;width:100%;text-align:left}
+.btn.primary{background:var(--accent);color:var(--accentInk);border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn .sub{display:block;font-weight:400;font-size:14px;opacity:.85}
+.btn.row{justify-content:flex-start}
+.stack{display:grid;gap:10px}
+.link{text-align:left;background:none;border:0;color:var(--accent);font-weight:700;padding:8px 0;min-height:44px}
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 18px}
+.vbar{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:4px 0;text-align:left;min-height:48px}
+.vbar b{display:block;font-family:"Saira Condensed",sans-serif;font-size:20px;line-height:1.1}
+.vbar span{font-size:13px;color:var(--dim)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--dim);flex:none}
+.dot.on{background:var(--g);box-shadow:0 0 0 4px color-mix(in srgb,var(--g) 25%,transparent)}
+.iconbtn{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;flex:none}
+/* bottom tabs */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{background:none;border:0;min-height:64px;display:grid;place-items:center;gap:2px;font-size:13px;color:var(--dim);padding:6px 0}
+.tab svg{width:26px;height:26px}
+.tab[aria-current="page"]{color:var(--accent);font-weight:700}
+/* welcome */
+.hero{padding:34px 0 18px}
+.hero h1{font-size:64px;line-height:.92}
+.hero p{font-size:19px;max-width:30ch}
+.gaugeHero{margin:22px 0 26px}
+/* finder */
+.crumbs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+.crumb{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:8px 14px;min-height:44px;font-weight:700;font-size:15px}
+.crumb.now{border-style:dashed;color:var(--dim);font-weight:400}
+.steptitle{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px}
+.steptitle .muted{font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid.one{grid-template-columns:1fr}
+.tile{position:relative;text-align:left;border:2px solid var(--line);background:var(--panel);border-radius:14px;padding:14px;min-height:92px;display:flex;flex-direction:column;justify-content:space-between;gap:6px}
+.tile b{font-family:"Saira Condensed",sans-serif;font-size:23px;line-height:1.05}
+.tile small{color:var(--dim);font-size:14px}
+.tile .cnt{font-size:13px;color:var(--accent);font-weight:700}
+.tile[aria-disabled="true"]{opacity:.5;border-style:dashed;cursor:not-allowed}
+.tile[aria-disabled="true"] .cnt{color:var(--dim)}
+.tile .lock{position:absolute;top:10px;right:10px;font-size:12px;color:var(--dim)}
+.search{width:100%;min-height:56px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--text);padding:0 16px;font:inherit;margin-bottom:12px}
+.note{border-left:4px solid var(--accent);background:var(--panel);padding:10px 14px;border-radius:0 10px 10px 0;margin:10px 0;font-size:15px}
+.field{display:grid;gap:6px;margin:10px 0}
+.field label{font-weight:700}
+.plate{font-family:"Saira Condensed",sans-serif;font-size:34px;letter-spacing:.12em;text-align:center;text-transform:uppercase;min-height:72px;border:3px solid var(--text);border-radius:10px;background:var(--panel);color:var(--text);width:100%}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--panel);border-radius:10px;min-height:48px;min-width:56px;padding:0 14px;font-weight:700}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accentInk);border-color:var(--accent)}
+/* vehicle card */
+.vcard{border:2px solid var(--line);border-radius:18px;background:var(--panel);padding:18px;display:grid;gap:10px}
+.vcard .sil{height:96px;color:var(--dim)}
+.vcard h2{font-size:34px}
+.spec{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}
+.spec dt{color:var(--dim)}.spec dd{margin:0;font-weight:700}
+.status{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px}
+/* cartridges */
+.carts{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 12px;margin:0 -18px;padding-left:18px;scroll-snap-type:x mandatory}
+.cart{scroll-snap-align:start;flex:none;width:118px;min-height:132px;border:2px solid var(--line);border-radius:12px 12px 4px 4px;background:var(--panel);padding:10px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+.cart::after{content:"";position:absolute;left:14px;right:14px;bottom:-2px;height:6px;border-radius:2px 2px 0 0;background:var(--line)}
+.cart b{font-family:"Saira Condensed",sans-serif;font-size:21px;line-height:1}
+.cart[aria-pressed="true"]{border-color:var(--accent)}
+.cart[aria-pressed="true"]::after{background:var(--accent)}
+.cart .oncar{font-size:12px;color:var(--g);font-weight:700}.cart .mine{font-size:12px;color:var(--accent);font-weight:700}.cart .tlv{font-size:11px;color:var(--dim);font-weight:700}
+.folder{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 14px}.folder .chip{min-height:44px}
+.filed{border:2px solid var(--line);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:15px}
+.meter{display:grid;gap:4px;font-size:11px;color:var(--dim)}
+.meter i{display:block;height:5px;border-radius:3px;background:var(--raise);overflow:hidden}
+.meter i span{display:block;height:100%;background:var(--text)}
+/* sections */
+.levels{display:grid;grid-template-columns:repeat(3,1fr);border:2px solid var(--line);border-radius:14px;overflow:hidden;margin:6px 0 14px}
+.levels button{border:0;background:var(--panel);min-height:56px;font-weight:700;font-size:15px;padding:4px}
+.levels button+button{border-left:2px solid var(--line)}
+.levels button[aria-pressed="true"]{background:var(--text);color:var(--bg)}
+.levels button span{display:block;font-weight:400;font-size:12px;opacity:.75}
+.secnav{position:sticky;top:calc(env(safe-area-inset-top,0px) + 69px);z-index:4;background:var(--bg);display:flex;gap:8px;overflow-x:auto;padding:8px 18px;margin:0 -18px 8px;border-bottom:1px solid var(--line)}
+.secbtn{flex:none;border:2px solid var(--line);background:var(--panel);border-radius:999px;min-height:44px;padding:0 14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.secbtn[aria-pressed="true"]{border-color:var(--text)}
+.zmark{display:inline-block;width:12px;height:12px;flex:none}
+.zmark.green{background:var(--g);border-radius:50%}
+.zmark.yellow{width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-bottom:12px solid var(--y)}
+.zmark.orange{background:var(--o);transform:rotate(45deg) scale(.85)}
+.zmark.red{background:var(--r)}
+/* setting row */
+.set{border-top:1px solid var(--line);padding:18px 0}
+.sethead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.sethead h3{font-size:22px}
+.sethead .val{font-size:34px;line-height:1}
+.stock{font-size:13px;color:var(--dim)}
+.zword{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin:10px 0 4px}
+.zword.green{color:var(--g)}.zword.yellow{color:var(--y)}.zword.orange{color:var(--o)}.zword.red{color:var(--r)}
+/* tape gauge — the signature control */
+.tapewrap{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center;margin-top:10px}
+.step{height:72px;border-radius:12px;border:2px solid var(--line);background:var(--panel);font-size:28px;font-weight:700}
+.tape{position:relative;height:72px;border-radius:12px;background:var(--tape);overflow:hidden;touch-action:none;cursor:grab;border:2px solid var(--line)}
+.tape:active{cursor:grabbing}
+.tape svg{position:absolute;top:0;left:0;height:100%;will-change:transform}
+.needle{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--needle);pointer-events:none}
+.needle::before{content:"";position:absolute;left:-7px;top:-1px;border-left:9px solid transparent;border-right:9px solid transparent;border-top:12px solid var(--needle)}
+.fade{position:absolute;top:0;bottom:0;width:40px;pointer-events:none}
+.fade.l{left:0;background:linear-gradient(90deg,var(--tape),transparent)}.fade.r{right:0;background:linear-gradient(270deg,var(--tape),transparent)}
+.fixes{display:grid;gap:8px;margin-top:10px}
+.fixes h4{margin:6px 0 0;font-size:15px}
+.fix{text-align:left;border:2px solid var(--accent);background:transparent;border-radius:12px;padding:10px 14px;min-height:52px;font-weight:700;color:var(--text)}
+.fix small{display:block;font-weight:400;color:var(--dim);font-size:13px}
+.more{background:none;border:0;color:var(--accent);font-weight:700;min-height:44px;padding:0}
+.risk{border-left:4px solid var(--r);padding:8px 12px;margin-top:8px;background:color-mix(in srgb,var(--r) 10%,var(--panel));border-radius:0 10px 10px 0;font-size:15px}
+/* switches */
+.sw{display:flex;align-items:center;gap:14px}
+.sw h3{flex:1;font-size:21px}
+.toggle{position:relative;width:76px;height:44px;border-radius:22px;border:2px solid var(--line);background:var(--raise);flex:none}
+.toggle::after{content:"";position:absolute;top:4px;left:4px;width:32px;height:32px;border-radius:50%;background:var(--dim);transition:left .15s}
+.toggle[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.toggle[aria-checked="true"]::after{left:36px;background:var(--accentInk)}
+.guard{position:relative}
+.guard .cover{position:absolute;inset:-4px;border-radius:24px;border:2px solid var(--r);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--r) 30%,var(--panel)) 0 8px,var(--panel) 8px 16px);font-size:11px;font-weight:700;display:grid;place-items:center;color:var(--text)}
+.locked{display:flex;align-items:center;gap:12px;border:2px dashed var(--line);border-radius:12px;padding:12px;margin-top:10px}
+.locked b{flex:1}
+@media (prefers-reduced-motion:reduce){.toggle::after{transition:none}*{scroll-behavior:auto!important}}
+/* live */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gauge{border:2px solid var(--line);border-radius:14px;background:var(--panel);padding:12px}
+.gauge .num{font-size:44px;line-height:1}
+.gauge small{color:var(--dim)}
+.bar{height:8px;border-radius:4px;background:var(--raise);margin-top:8px;overflow:hidden}.bar span{display:block;height:100%;background:var(--text)}
+.dyno{border:2px solid var(--line);border-radius:14px;background:var(--panel);padding:12px;margin-top:14px}
+.dyno svg{width:100%;height:auto;display:block}
+.legend{display:flex;gap:16px;font-size:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:22px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+/* flash */
+.check{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid var(--line)}
+.check .ic{width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;flex:none;font-weight:700}
+.check.ok .ic{background:var(--g);border-color:var(--g);color:#fff}
+.check.bad .ic{background:var(--r);border-color:var(--r);color:#fff}
+.check.run .ic{border-color:var(--accent);border-top-color:transparent;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.check b{display:block}
+.diff{display:grid;grid-template-columns:1fr auto auto;gap:6px 14px;font-size:15px;align-items:center}
+.diff .num{font-size:18px}
+.volt{font-size:56px;line-height:1}
+/* shop */
+.tier{text-align:left;width:100%;border:2px solid var(--line);border-radius:16px;background:var(--panel);padding:16px;display:grid;gap:8px}
+.tier[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent)}
+.tier .price{font-size:42px;line-height:1}
+.tier ul{margin:0;padding-left:20px;font-size:15px}
+.tier .owned{color:var(--g);font-weight:700}
+.pack{display:flex;gap:12px;align-items:center;border-top:1px solid var(--line);padding:14px 0}
+.pack div{flex:1}
+.pack .num{font-size:24px}
+.promise{display:grid;gap:6px;border:2px solid var(--text);border-radius:14px;padding:14px;margin:16px 0}
+.cartbar{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--text);color:var(--bg)}
+.cartbar .in{max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:10px 18px}
+.cartbar .num{font-size:30px}
+.cartbar button{margin-left:auto;background:var(--accent);color:var(--accentInk);border:0;border-radius:12px;min-height:52px;padding:0 20px;font-weight:700}
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;display:none}
+.scrim.open{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--bg);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;transform:translateY(105%);transition:transform .2s;padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet.open{transform:none}
+.sheet .in{max-width:560px;margin:0 auto;padding:20px 18px 26px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--text);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;z-index:30;display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+hr{border:0;border-top:1px solid var(--line);margin:18px 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true"><div class="in" id="sheetIn"></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+/*BUNDLE*/
+</script>
+<script>
+"use strict";
+var FL=requireMod("./tune/filing"),R=requireMod("./tune/rules"),P=requireMod("./tune/presets"),E=requireMod("./ecu/ecuProfiles"),D=requireMod("./vehicle/detect");
+
+/* ---------------- pricing: one place to edit ---------------- */
+/* Licences are per manufacturer: one licence covers every vehicle of that make you own, any model, any year. */
+var EXTRA_MAKE=0.5; // each additional make on the same licence level costs half
+var TIERS=[
+  {id:"street",name:"Street",price:449,cats:["car"],pro:false,blurb:"Cars, utes and 4WDs",
+   inc:["Every vehicle of your chosen make","All 11 tunes, adjustable","Simple and detailed controls","Live data, fault codes, factory backup"]},
+  {id:"pro",name:"Pro",price:849,cats:["car"],pro:true,blurb:"Everything in Street, fully open",
+   inc:["Every vehicle of your chosen make","Open ranges on every control","Cell-by-cell table editing","Datalog overlays and compare"]},
+  {id:"commercial",name:"Commercial",price:1690,cats:["car","truck"],pro:true,vehicles:5,biz:true,blurb:"Trucks and prime movers, plus Pro",
+   inc:["Every truck and car of your chosen make","All Pro tools","Fleet garage, no vehicle limit"]},
+  {id:"heavy",name:"Heavy",price:2690,cats:["car","truck","ag","plant"],pro:true,vehicles:10,biz:true,blurb:"Trucks, ag and earthmoving, plus Pro",
+   inc:["Every machine, truck and car of your chosen make","Tractors, harvesters, excavators, dozers","All Pro tools, no vehicle limit"]}
+];
+var PACKS=[
+  {id:"emissions",name:"Emissions",price:349,what:"EGR, DPF, SCR/AdBlue, swirl flaps, cat monitor, rear O2, EVAP switches",
+   ids:["t_egr","t_dpf","t_scr","t_swirl","t_cat_mon","t_rear_o2","t_evap"]},
+  {id:"safety",name:"Safety systems",price:199,what:"ABS, stability, traction control, brake override, hill hold",
+   seg:"Brakes & Traction"},
+  {id:"trans",name:"Transmission Pro",price:199,what:"Shift points, shift speed, line pressure, lock-up, kickdown",
+   ids:["shift_rpm","shift_time","line_pressure","tcc_lock","kickdown","t_tcc","t_auto_upshift"]},
+  {id:"launch",name:"Launch and sound",price:149,what:"Launch control, flat shift, pops and crackles, anti-lag, speed limiter",
+   ids:["launch_rpm","t_launch","t_flatshift","t_popsbangs","t_antilag","t_speed_lim"]}
+];
+function packFor(id,seg){for(var i=0;i<PACKS.length;i++){var p=PACKS[i];if(p.ids&&p.ids.indexOf(id)>=0)return p;if(p.seg&&p.seg===seg)return p}return null}
+function money(n){return "A$"+n.toLocaleString("en-AU")}
+
+/* ---------------- vehicle catalogue (Australian market) ---------------- */
+var CATS=[
+  {id:"car",name:"Car, ute and 4WD",sub:"Passenger, 4WD, vans and light commercial"},
+  {id:"truck",name:"Truck and prime mover",sub:"Rigid, prime mover, light truck",biz:true},
+  {id:"ag",name:"Tractor and ag",sub:"Tractors, sprayers, harvest",biz:true},
+  {id:"plant",name:"Earthmoving and plant",sub:"Excavators, dozers, backhoes",biz:true}
+];
+function en(n,code,kw,nm,eng,ecu,trans,note){return{n:n,code:code,kw:kw,nm:nm,eng:eng,ecu:ecu,trans:trans||[],note:note}}
+var NA="na_petrol",TP="turbo_petrol",TD="turbo_diesel";
+var AUTO6="6-speed auto",MAN6="6-speed manual";
+var CATALOG=[
+ {cat:"car",make:"Ford",model:"Falcon",gens:[
+  {g:"FG X",y:"2014–2016",e:[en("4.0 Barra 270T turbo","Barra 270T",270,533,TP,"ford-spanish-oak",[AUTO6,MAN6]),en("4.0 Barra","Barra 195",195,391,NA,"ford-spanish-oak",[AUTO6,MAN6]),en("5.0 supercharged V8","Miami V8",335,570,TP,"ford-spanish-oak",[AUTO6,MAN6])]},
+  {g:"FG",y:"2008–2014",e:[en("4.0 Barra 270T turbo","Barra 270T",270,533,TP,"ford-spanish-oak",[AUTO6,MAN6]),en("4.0 Barra","Barra 195",195,391,NA,"ford-spanish-oak",[AUTO6,MAN6])]}]},
+ {cat:"car",make:"Ford",model:"Territory",gens:[{g:"SZ",y:"2011–2016",e:[en("4.0 Barra","Barra 195",195,391,NA,"ford-spanish-oak",[AUTO6]),en("2.7 V6 diesel","2.7 TDCi",140,440,TD,"continental-sim-sid",[AUTO6])]}]},
+ {cat:"car",make:"Holden",model:"Commodore",gens:[
+  {g:"VF",y:"2013–2017",e:[en("6.2 V8 LS3","LS3",304,570,NA,"gm-e38-e67",[AUTO6,MAN6]),en("3.6 V6","LFX",210,350,NA,"gm-e39-e77",[AUTO6])]},
+  {g:"VE",y:"2006–2013",e:[en("6.0 V8","L98 / L76 / L77",270,530,NA,"gm-e38-e67",[AUTO6,MAN6]),en("3.6 V6","Alloytec / SIDI",210,350,NA,"gm-e39-e77",[AUTO6,MAN6])]}]},
+ {cat:"car",make:"Subaru",model:"WRX",gens:[{g:"VA",y:"2014–2021",e:[en("2.0 turbo","FA20DIT",197,350,TP,"denso-subaru-mazda",[MAN6,"CVT"])]}]},
+ {cat:"car",make:"Toyota",model:"HiLux",gens:[
+  {g:"GUN126 facelift",y:"2020–on",e:[en("2.8 turbo diesel","1GD-FTV",150,500,TD,"denso-toyota",[AUTO6,MAN6])]},
+  {g:"GUN126",y:"2015–2020",e:[en("2.8 turbo diesel","1GD-FTV",130,450,TD,"denso-toyota",[AUTO6,MAN6]),en("2.4 turbo diesel","2GD-FTV",110,400,TD,"denso-toyota",[AUTO6,MAN6])]}]},
+ {cat:"car",make:"Toyota",model:"LandCruiser 70",gens:[{g:"VDJ79",y:"2016–2023",e:[en("4.5 V8 turbo diesel","1VD-FTV",151,430,TD,"denso-toyota",["5-speed manual"])]}]},
+ {cat:"car",make:"Toyota",model:"LandCruiser 300",gens:[{g:"FJA300",y:"2021–on",e:[en("3.3 V6 twin-turbo diesel","F33A-FTV",227,700,TD,"denso-toyota",["10-speed auto"])]}]},
+ {cat:"car",make:"Toyota",model:"Prado",gens:[{g:"150 series",y:"2020–2024",e:[en("2.8 turbo diesel","1GD-FTV",150,500,TD,"denso-toyota",[AUTO6])]}]},
+ {cat:"car",make:"Ford",model:"Ranger",gens:[
+  {g:"Next-gen",y:"2022–on",e:[en("3.0 V6 turbo diesel","3.0 V6",184,600,TD,"bosch-edc17",["10-speed auto"])]},
+  {g:"PX2 / PX3",y:"2015–2022",e:[en("3.2 turbo diesel","P5AT",147,470,TD,"bosch-edc17",[AUTO6,"10-speed auto",MAN6]),en("2.0 bi-turbo diesel","2.0 Bi-Turbo",157,500,TD,"continental-sim-sid",["10-speed auto"])]}]},
+ {cat:"car",make:"Mazda",model:"BT-50",gens:[{g:"TF",y:"2020–on",e:[en("3.0 turbo diesel","4JJ3-TCX",140,450,TD,"transtron-isuzu",[AUTO6,MAN6])]},{g:"UR",y:"2015–2020",e:[en("3.2 turbo diesel","P5AT",147,470,TD,"bosch-edc17",[AUTO6,MAN6])]}]},
+ {cat:"car",make:"Nissan",model:"Navara",gens:[{g:"NP300",y:"2015–on",e:[en("2.3 twin-turbo diesel","YS23DDTT",140,450,TD,"bosch-edc17",["7-speed auto",MAN6])]}]},
+ {cat:"car",make:"Nissan",model:"Patrol",gens:[{g:"Y62",y:"2013–on",e:[en("5.6 V8 petrol","VK56VD",298,560,NA,"hitachi-nissan",["7-speed auto"])]}]},
+ {cat:"car",make:"Mitsubishi",model:"Triton",gens:[{g:"MQ / MR",y:"2015–2023",e:[en("2.4 turbo diesel","4N15",133,430,TD,"mitsubishi-mut",[AUTO6,MAN6])]}]},
+ {cat:"car",make:"Mitsubishi",model:"Pajero Sport",gens:[{g:"QE / QF",y:"2015–on",e:[en("2.4 turbo diesel","4N15",133,430,TD,"mitsubishi-mut",["8-speed auto"])]}]},
+ {cat:"car",make:"Isuzu Ute",model:"D-Max",gens:[{g:"RG",y:"2020–on",e:[en("3.0 turbo diesel","4JJ3-TCX",140,450,TD,"transtron-isuzu",[AUTO6,MAN6])]}]},
+ {cat:"truck",make:"Kenworth",model:"T610",gens:[{g:"T610 / T610SAR",y:"2017–on",e:[en("Cummins X15","X15",null,null,TD,"cummins-cm2350",["18-speed Eaton manual","Automated manual"]),en("PACCAR MX-13","MX-13",null,null,TD,"paccar-mx",["Automated manual"])]}]},
+ {cat:"truck",make:"Kenworth",model:"T410",gens:[{g:"T410 / T410SAR",y:"2014–on",e:[en("PACCAR MX-13","MX-13",null,null,TD,"paccar-mx",["Automated manual","Manual"])]}]},
+ {cat:"truck",make:"Volvo Trucks",model:"FH",gens:[{g:"FH (4th gen)",y:"2013–2021",e:[en("Volvo D13","D13",null,null,TD,"volvo-group",["I-Shift"])]}]},
+ {cat:"truck",make:"Mack",model:"Anthem",gens:[{g:"Anthem",y:"2021–on",e:[en("Mack MP8","MP8 13L",null,null,TD,"volvo-group",["mDRIVE","Manual"])]}]},
+ {cat:"truck",make:"Freightliner",model:"Cascadia",gens:[{g:"Cascadia",y:"2020–on",e:[en("Detroit DD13","DD13",null,null,TD,"detroit-dd",["DT12"]),en("Detroit DD15","DD15",null,null,TD,"detroit-dd",["DT12"]),en("Detroit DD16","DD16",null,null,TD,"detroit-dd",["DT12"])]}]},
+ {cat:"truck",make:"Isuzu Trucks",model:"N Series",gens:[{g:"NLR / NNR / NPR / NQR",y:"2008–on",e:[en("Isuzu 4-cylinder diesel","4JJ1 / 4HK1",null,null,TD,"japan-trucks",["Automated manual","Allison auto","Manual"])]}]},
+ {cat:"truck",make:"Hino",model:"500 Series",gens:[{g:"500 Series",y:"2017–on",e:[en("Hino J08E","J08E",null,null,TD,"japan-trucks",["Allison auto","Manual"])]}]},
+ {cat:"truck",make:"Scania",model:"R / S series",gens:[{g:"New Truck Generation",y:"2017–on",e:[en("Scania 13L","DC13",null,null,TD,"euro-trucks",["Opticruise"])]}]},
+ {cat:"ag",make:"John Deere",model:"8R",gens:[{g:"8R series",y:"2020–on",e:[en("PowerTech 9.0L","PSS 9.0L",null,null,TD,"deere",["e23","IVT"])]}]},
+ {cat:"ag",make:"John Deere",model:"6R",gens:[{g:"6R series",y:"2021–on",e:[en("PowerTech 6.8L","PVS 6.8L",null,null,TD,"deere",["AutoQuad","AutoPowr IVT"])]}]},
+ {cat:"ag",make:"Case IH",model:"Magnum",gens:[{g:"Magnum",y:"2018–on",e:[en("FPT Cursor 9","Cursor 9",null,null,TD,"cnh",["Powershift","CVT"])]}]},
+ {cat:"ag",make:"Case IH",model:"Puma",gens:[{g:"Puma",y:"2018–on",e:[en("FPT NEF 6.7L","NEF 6.7",null,null,TD,"cnh",["Powershift","CVX"])]}]},
+ {cat:"ag",make:"New Holland",model:"T7",gens:[{g:"T7",y:"2019–on",e:[en("FPT NEF 6.7L","NEF 6.7",null,null,TD,"cnh",["Dynamic Command","Auto Command"])]}]},
+ {cat:"ag",make:"Kubota",model:"M7",gens:[{g:"M7",y:"2015–on",e:[en("Kubota 6.1L","V6108",null,null,TD,"kubota",["Powershift","KVT"])]}]},
+ {cat:"plant",make:"Caterpillar",model:"320 excavator",gens:[{g:"Next Gen 320",y:"2018–on",e:[en("Cat C7.1","C7.1",null,null,TD,"cat-adem",["Hydrostatic"])]}]},
+ {cat:"plant",make:"Caterpillar",model:"D6 dozer",gens:[{g:"D6 (XE)",y:"2019–on",e:[en("Cat C9.3B","C9.3B",null,null,TD,"cat-adem",["Electric drive","Powershift"])]}]},
+ {cat:"plant",make:"Komatsu",model:"PC210",gens:[{g:"PC210-10M0",y:"2016–on",e:[en("Komatsu 6-cylinder diesel","SAA6D107E",null,null,TD,"komatsu",["Hydrostatic"])]}]},
+ {cat:"plant",make:"JCB",model:"3CX backhoe",gens:[{g:"3CX",y:"2016–on",e:[en("JCB DieselMax 448","448",null,null,TD,"jcb",["Powershift","Manual shuttle"])]}]},
+ {cat:"plant",make:"Kubota",model:"KX080 excavator",gens:[{g:"KX080-4",y:"2015–on",e:[en("Kubota 3.3L","V3307",null,null,TD,"kubota",["Hydrostatic"])]}]}
+];
+/*MAKES*/
+var MAKE_ECU={"Mack":"volvo-group","Volvo Trucks":"volvo-group","UD Trucks":"volvo-group","Isuzu Trucks":"japan-trucks","Hino":"japan-trucks","Fuso":"japan-trucks","DAF":"paccar-mx","Scania":"euro-trucks","MAN":"euro-trucks","Iveco":"euro-trucks","Mercedes-Benz Trucks":"euro-trucks","Freightliner":"detroit-dd","John Deere":"deere","Case IH":"cnh","New Holland":"cnh","Case CE":"cnh","Kubota":"kubota","Caterpillar":"cat-adem","Komatsu":"komatsu","JCB":"jcb"};
+var ALL=(function(){
+  function generic(cat,ecu){return cat==="car"?[en("Petrol","Petrol",null,null,NA,ecu,[]),en("Turbo petrol","Turbo petrol",null,null,TP,ecu,[]),en("Diesel","Diesel",null,null,TD,ecu,[])]:[en("Diesel","Diesel",null,null,TD,ecu,[])]}
+  var out=CATALOG.slice(),have={};CATALOG.forEach(function(r){have[r.cat+"|"+r.make+"|"+r.model]=1;r.gens.push({g:"Other years",y:"Not listed above",other:true,e:generic(r.cat,MAKE_ECU[r.make]||"detect")})});
+  Object.keys(MAKE_MODELS).forEach(function(cat){Object.keys(MAKE_MODELS[cat]).forEach(function(make){MAKE_MODELS[cat][make].forEach(function(mm){
+    var parts=mm.split("|"),model=parts[0],ev=parts[1]==="EV";if(have[cat+"|"+make+"|"+model])return;
+    var ecu=MAKE_ECU[make]||"detect",e;
+    if(ev)e=[en("Electric","EV",null,null,null,null,[],"Electric: live data and diagnostics only")];
+    else if(cat==="car")e=[en("Petrol","Petrol",null,null,NA,ecu,[]),en("Turbo petrol","Turbo petrol",null,null,TP,ecu,[]),en("Diesel","Diesel",null,null,TD,ecu,[])];
+    else e=[en("Diesel","Diesel",null,null,TD,ecu,[])];
+    out.push({cat:cat,make:make,model:model,generic:true,gens:[{g:"All years",y:"",e:e}]})})})});
+  return out})();
+var STATUS={detect:["Supported. The receiver confirms the exact ECU when you plug in","yellow"],ready:["Full tune ready","green"],"plugin-needed":["Read and preview now. Writing needs the unlock for this ECU (in development)","yellow"],"bench-only":["Bench flash only","yellow"],legacy:["Older protocol, separate cable","yellow"],"oem-only":["Read only for now: live data and fault codes","yellow"]};
+function prof(id){if(id==="detect")return{id:id,manufacturer:"Confirmed",family:"when you plug in",status:"detect"};return E.ECU_PROFILES.find(function(p){return p.id===id})||{id:id,manufacturer:"Confirmed",family:"when you plug in",status:"detect"}}
+
+/* ---------------- state ---------------- */
+var store={get:function(k,d){try{var v=localStorage.getItem("ct2:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set:function(k,v){try{localStorage.setItem("ct2:"+k,JSON.stringify(v))}catch(e){}}};
+var S={
+  view:store.get("view","welcome"), tab:store.get("tab","garage"),
+  garage:store.get("garage",[]), active:store.get("active",null),
+  owned:(function(o){if(!o||!o.licences)return{licences:[],packs:(o&&o.packs)||[]};return o})(store.get("owned",null)), agreed:store.get("agreed",false),
+  slots:store.get("slots",{}), onCar:store.get("onCar",{}),
+  preset:"factory", user:store.get("user",{}), skill:store.get("skill","simple"), sec:null, open:{}, guard:{},
+  finder:{sel:{},step:"cat",from:null}, cart:{tier:null,makes:[],packs:{}}, showBiz:false, flash:null, live:null
+};
+function save(){store.set("view",S.view);store.set("tab",S.tab);store.set("garage",S.garage);store.set("active",S.active);store.set("owned",S.owned);store.set("agreed",S.agreed);store.set("slots",S.slots);store.set("onCar",S.onCar);store.set("skill",S.skill);store.set("user",S.user)}
+function tierOf(id){return TIERS.find(function(t){return t.id===id})}
+function veh(){return S.garage.find(function(v){return v.id===S.active})||null}
+function ownsPack(id){return S.owned.packs.indexOf(id)>=0}
+function licenceFor(make){return S.owned.licences.find(function(l){return l.make===make})||null}
+function licensedFor(v){if(!v)return false;var l=licenceFor(v.make);return !!(l&&tierOf(l.tier).cats.indexOf(v.cat)>=0)}
+function hasPro(){var v=veh(),l=v&&licenceFor(v.make);return !!(l&&tierOf(l.tier).pro)}
+function catAllowed(c){var cat=CATS.find(function(x){return x.id===c});if(!cat.biz)return true;return S.owned.licences.some(function(l){return tierOf(l.tier).cats.indexOf(c)>=0})}
+function makesFor(tier){var t=tierOf(tier),m={};ALL.forEach(function(r){if(t.cats.indexOf(r.cat)>=0)m[r.make]=1});return Object.keys(m).sort()}
+
+/* ---------------- helpers ---------------- */
+var $=function(id){return document.getElementById(id)};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function toast(t){var el=$("toast");el.textContent=t;el.style.display="block";clearTimeout(toast.t);toast.t=setTimeout(function(){el.style.display="none"},1800)}
+function openSheet(html){$("sheetIn").innerHTML=html;$("scrim").classList.add("open");$("sheet").classList.add("open");var f=$("sheetIn").querySelector("button,input");f&&f.focus()}
+function closeSheet(){$("scrim").classList.remove("open");$("sheet").classList.remove("open")}
+$("scrim").onclick=closeSheet;
+document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet()});
+var ZW={green:"Safe",yellow:"Mild",orange:"Aggressive",red:"Limit"};
+function zm(z){return '<i class="zmark '+z+'" aria-hidden="true"></i>'}
+function go(view){S.view=view;save();render();window.scrollTo(0,0)}
+function setTab(t){S.tab=t;S.view="app";save();render();window.scrollTo(0,0)}
+
+/* silhouettes: simple line drawings per category */
+var UTE4=/HiLux|Ranger|LandCruiser|Prado|Patrol|Navara|Triton|D-Max|MU-X|BT-50|Everest|Pajero|Colorado|Amarok|Wrangler|Defender|Fortuner|Cannon|Tank|Jimny|Gladiator|Musso|Rexton|T60|Tunland|Shark|Grenadier|1500|2500|3500|Silverado|F-150|Tasman|Landtrek|Rodeo|Trailblazer|Grand Cherokee|Discovery/;
+function sil(cat,model){if(cat==="car"&&model&&UTE4.test(model))cat="4wd";
+  var st='fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+  if(cat==="truck")return '<svg viewBox="0 0 240 96" class="sil" aria-hidden="true"><path '+st+' d="M10 70V30h70l24 22h20v18M124 40h100v30H124z"/><circle '+st+' cx="44" cy="74" r="12"/><circle '+st+' cx="150" cy="74" r="12"/><circle '+st+' cx="196" cy="74" r="12"/></svg>';
+  if(cat==="ag")return '<svg viewBox="0 0 240 96" class="sil" aria-hidden="true"><path '+st+' d="M60 64V24h52l18 30h40v18M60 40h52"/><circle '+st+' cx="84" cy="66" r="24"/><circle '+st+' cx="182" cy="76" r="12"/></svg>';
+  if(cat==="plant")return '<svg viewBox="0 0 240 96" class="sil" aria-hidden="true"><path '+st+' d="M40 64h110M60 64V38h50v26M110 44l50-26 40 30-10 10M40 76h110"/><circle '+st+' cx="52" cy="76" r="8"/><circle '+st+' cx="138" cy="76" r="8"/></svg>';
+  if(cat==="4wd")return '<svg viewBox="0 0 240 96" class="sil" aria-hidden="true"><path '+st+' d="M16 66V40l16-4 16-22h70v24h100l6 6v22H16zM118 38V14M60 20l-8 16"/><path '+st+' d="M26 14h92"/><circle '+st+' cx="60" cy="68" r="17"/><circle '+st+' cx="186" cy="68" r="17"/></svg>';
+  return '<svg viewBox="0 0 240 96" class="sil" aria-hidden="true"><path '+st+' d="M14 64V52l26-8 34-22h72l30 22 44 6 6 14H14z"/><circle '+st+' cx="58" cy="66" r="14"/><circle '+st+' cx="184" cy="66" r="14"/></svg>';
+}
+var ICON={
+  garage:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-6 9 6v10H3z"/><path d="M7 20v-6h10v6"/></svg>',
+  tune:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  live:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg>',
+  flash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></svg>',
+  shop:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>',
+  sun:'<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>'
+};
+
+/* ---------------- render root ---------------- */
+function render(){
+  var app=$("app");
+  if(S.view==="welcome")return renderWelcome(app);
+  if(S.view==="connect")return renderConnect(app);
+  if(S.view==="rego")return renderRego(app);
+  if(S.view==="vin")return renderVin(app);
+  if(S.view==="finder")return renderFinder(app);
+  if(S.view==="confirm")return renderConfirm(app);
+  renderShell(app);
+}
+
+/* ---------------- welcome ---------------- */
+function renderWelcome(app){
+  app.innerHTML='<main class="wrap"><section class="hero"><h1>CarTune</h1><p class="muted">Tune your vehicle from your phone. Start by telling it what you drive.</p>'+
+   '<div class="gaugeHero" id="heroTape"></div></section>'+
+   '<div class="stack">'+
+   '<button class="btn primary row" id="wConnect"><span>Plug in the receiver<span class="sub">Reads the vehicle for you. Nothing to type.</span></span></button>'+
+   '<button class="btn row" id="wRego"><span>Look up by rego<span class="sub">Free state rego check</span></span></button>'+
+   '<button class="btn row" id="wVin"><span>Enter the VIN<span class="sub">From the compliance plate or windscreen</span></span></button>'+
+   '<button class="btn row" id="wPick"><span>Choose it myself<span class="sub">Pick make, model and engine</span></span></button>'+
+   '</div>'+(S.garage.length?'<p style="margin-top:16px"><button class="link" id="wGarage">Back to my garage</button></p>':'')+'</main>';
+  $("wConnect").onclick=function(){go("connect")};
+  $("wRego").onclick=function(){go("rego")};
+  $("wVin").onclick=function(){go("vin")};
+  $("wPick").onclick=function(){S.finder={sel:{},step:"cat",from:null};go("finder")};
+  if($("wGarage"))$("wGarage").onclick=function(){setTab("garage")};
+  heroTape($("heroTape"));
+}
+function heroTape(host){
+  // a moving tape gauge as the opening moment: stock to Day Use timing
+  var def=R.SETTINGS.find(function(s){return s.id==="timing_wot"});
+  var ctx={engine:"na_petrol",fuel:"98",upgrades:{intercooler:false,fuelSystem:false,internals:false,cooling:false,driveline:false},skill:"standard"};
+  var v={timing_wot:0};
+  host.innerHTML='<div class="sethead"><h3>Ignition timing</h3><span class="num val" id="hv">0.0°</span></div><div class="tapewrap" style="grid-template-columns:1fr"><div class="tape" id="ht" aria-hidden="true"></div></div>';
+  var t=$("ht"),target=1.5,cur=0,reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function draw(){if(!document.body.contains(t))return;var b=def.bands(ctx,v);drawTape(t,def,cur,b,ctx,"standard");$("hv").textContent=(cur>0?"+":"")+cur.toFixed(1)+"°"}
+  if(reduce){cur=target;draw();return}
+  var start=null;function step(ts){if(!start)start=ts;var k=Math.min(1,(ts-start)/1400);cur=target*(1-Math.pow(1-k,3));draw();if(k<1)requestAnimationFrame(step)}
+  draw();setTimeout(function(){requestAnimationFrame(step)},500);
+}
+
+/* ---------------- connect (receiver) ---------------- */
+function renderConnect(app){
+  app.innerHTML='<main class="wrap"><button class="link" id="back">Back</button><h2>Plug in the receiver</h2>'+
+  '<p class="muted">Cars and utes: the 16-pin port under the dash, driver side. Trucks: the round 9-pin Deutsch port. Machinery: the diagnostic port in the cab.</p>'+
+  '<p class="muted">Ignition on, engine off.</p><div id="steps" style="margin-top:14px"></div></main>';
+  $("back").onclick=function(){go("welcome")};
+  var steps=[["Receiver found","CarTune receiver, Bluetooth"],["Reading VIN","6FPAAAJGSWFxxxxxx"],["Identifying ECU","Ford Spanish Oak PCM, OS HACC"],["Saving factory file","Stored in your account before anything else"]];
+  var host=$("steps"),i=0;
+  function tick(){host.innerHTML=steps.map(function(s,k){var cls=k<i?"ok":k===i?"run":"";return '<div class="check '+cls+'"><span class="ic">'+(k<i?"✓":"")+'</span><div><b>'+esc(s[0])+'</b><span class="muted small">'+(k<=i?esc(s[1]):"")+'</span></div></div>'}).join("");
+    if(i<steps.length){i++;setTimeout(tick,650)}else setTimeout(function(){
+      var e=CATALOG[0].gens[0].e[0];S.finder={sel:{cat:"car",make:"Ford",model:"Falcon",gen:"FG X",eng:e.n,trans:AUTO6},from:"receiver",backup:true};go("confirm")},500)}
+  tick();
+}
+
+/* ---------------- rego (free state check) ---------------- */
+var STATES=[["WA","Department of Transport WA"],["NSW","Service NSW"],["VIC","VicRoads"],["QLD","TMR Queensland"],["SA","EzyReg SA"],["TAS","Transport Tasmania"],["ACT","Access Canberra"],["NT","NT Motor Vehicle Registry"]];
+function renderRego(app){
+  var st=store.get("state","WA");
+  app.innerHTML='<main class="wrap"><button class="link" id="back">Back</button><h2>Look up by rego</h2><p class="muted">Uses your state’s free rego check. No cost.</p>'+
+  '<div class="field"><label>State</label><div class="chips" id="st"></div></div>'+
+  '<div class="field"><label for="plate">Number plate</label><input id="plate" class="plate" maxlength="9" autocomplete="off" autocapitalize="characters" placeholder="1ABC234"></div>'+
+  '<button class="btn primary" id="look">Check with <span id="stn"></span></button>'+
+  '<div class="note">Most states return make, model and year. You’ll pick the exact engine next. Paid history reports (finance owing, write-offs) are optional and priced on that provider’s own checkout.</div></main>';
+  $("back").onclick=function(){go("welcome")};
+  function paint(){$("st").innerHTML="";STATES.forEach(function(s){var b=document.createElement("button");b.className="chip";b.textContent=s[0];b.setAttribute("aria-pressed",s[0]===st?"true":"false");b.onclick=function(){st=s[0];store.set("state",st);paint()};$("st").appendChild(b)});$("stn").textContent=STATES.find(function(s){return s[0]===st})[1]}
+  paint();
+  $("look").onclick=function(){var p=$("plate").value.trim();if(p.length<2){$("plate").focus();toast("Enter the plate");return}
+    openSheet('<h3>'+esc(STATES.find(function(s){return s[0]===st})[1])+'</h3><p class="muted">In the app this opens the free government check with your plate filled in, then reads the result back.</p><div class="check ok"><span class="ic">✓</span><div><b>Toyota HiLux</b><span class="muted small">2019, utility, registered</span></div></div><button class="btn primary" id="useIt" style="margin-top:12px">Use this and pick the engine</button>');
+    $("useIt").onclick=function(){closeSheet();S.finder={sel:{cat:"car",make:"Toyota",model:"HiLux"},step:"gen",from:"rego",hint:"2019"};go("finder")}};
+}
+
+/* ---------------- VIN ---------------- */
+function renderVin(app){
+  app.innerHTML='<main class="wrap"><button class="link" id="back">Back</button><h2>Enter the VIN</h2><p class="muted">17 characters. Find it on the compliance plate, the bottom of the windscreen, or your rego papers.</p>'+
+  '<div class="field"><label for="vin">VIN</label><input id="vin" class="plate" style="font-size:24px;letter-spacing:.06em" maxlength="17" autocomplete="off" autocapitalize="characters" placeholder="6FPAAAJGSW..."></div>'+
+  '<p id="vres" class="muted" aria-live="polite">Letters I, O and Q are never used in a VIN.</p><button class="btn primary" id="vgo" disabled>Continue</button></main>';
+  $("back").onclick=function(){go("welcome")};
+  var found=null;
+  $("vin").oninput=function(){var v=this.value.toUpperCase().replace(/[IOQ\s]/g,"");this.value=v;var r=D.decodeVin(v);found=null;
+    if(v.length<3){$("vres").textContent="Letters I, O and Q are never used in a VIN.";$("vgo").disabled=true;return}
+    var mk=r.make||null;var match=mk&&ALL.find(function(c){return mk.toLowerCase().indexOf(c.make.split(" ")[0].toLowerCase())>=0});
+    $("vres").textContent=mk?("Maker: "+mk+(r.year?", model year "+r.year:"")+(v.length===17?(r.valid?". VIN looks valid.":". Check digit doesn’t match, double-check the VIN."):". Keep typing.")):"Maker not recognised yet. You can still choose it yourself.";
+    found=match?{cat:match.cat,make:match.make}:null;$("vgo").disabled=!(v.length===17)};
+  $("vgo").onclick=function(){S.finder={sel:found||{},step:found?"model":"cat",from:"vin"};go("finder")};
+}
+
+/* ---------------- step-by-step finder ---------------- */
+var STEPS=[["cat","Type"],["make","Make"],["model","Model"],["gen","Generation"],["eng","Engine"],["trans","Transmission"]];
+function listFor(step,sel){
+  var rows=ALL.filter(function(c){return(!sel.cat||c.cat===sel.cat)&&(!sel.make||step==="make"||c.make===sel.make)&&(!sel.model||["make","model"].indexOf(step)>=0||c.model===sel.model)});
+  if(step==="cat")return CATS.filter(function(c){return !c.biz||catAllowed(c.id)}).map(function(c){var n=ALL.filter(function(x){return x.cat===c.id}).length;return{key:c.id,title:c.name,sub:c.sub,cnt:n+" models"}});
+  if(step==="make"){var m={},pop=POPULAR[sel.cat]||[];rows.forEach(function(r){m[r.make]=(m[r.make]||0)+1});return Object.keys(m).sort(function(a,b){var ia=pop.indexOf(a),ib=pop.indexOf(b);if(ia<0)ia=99;if(ib<0)ib=99;return ia-ib||a.localeCompare(b)}).map(function(k){return{key:k,title:k,cnt:m[k]+(m[k]>1?" models":" model")}})}
+  if(step==="model")return rows.slice().sort(function(a,b){return (a.generic?1:0)-(b.generic?1:0)||a.model.localeCompare(b.model)}).map(function(r){var e=[].concat.apply([],r.gens.map(function(g){return g.e}));var ok=e.filter(function(x){return x.ecu}).length;
+    if(r.generic)return{key:r.model,title:r.model,sub:ok?"":"Electric",cnt:ok?"Supported":"Live data only",off:!ok};
+    return{key:r.model,title:r.model,sub:r.gens.map(function(g){return g.g}).join(", "),cnt:ok+" engine"+(ok>1?"s":"")+" in detail"}});
+  var row=rows[0];if(!row)return[];
+  if(step==="gen")return row.gens.map(function(g){if(g.other)return{key:g.g,title:g.g,sub:g.y,cnt:"Engine read when you plug in"};var ok=g.e.filter(function(x){return x.ecu}).length;return{key:g.g,title:g.g,sub:g.y,cnt:ok?ok+" engine"+(ok>1?"s":""):"Not supported yet",off:!ok}});
+  var gen=row.gens.find(function(g){return g.g===sel.gen});if(!gen)return[];
+  if(step==="eng")return gen.e.map(function(e){return{key:e.n,title:e.n,sub:(row.generic||gen.other)?"Exact engine and ECU read by the receiver":e.code+(e.kw?", "+e.kw+" kW / "+e.nm+" Nm":""),cnt:e.ecu?(prof(e.ecu).status==="ready"?"Full tune ready":"Supported"):e.note,off:!e.ecu}});
+  var eng=gen.e.find(function(e){return e.n===sel.eng});if(!eng)return[];
+  if(step==="trans")return eng.trans.map(function(t){return{key:t,title:t}});
+  return[];
+}
+function nextStep(step){var i=STEPS.findIndex(function(s){return s[0]===step});return i<STEPS.length-1?STEPS[i+1][0]:null}
+function clearAfter(sel,step){var i=STEPS.findIndex(function(s){return s[0]===step});STEPS.slice(i+1).forEach(function(s){delete sel[s[0]]})}
+function advance(){ // auto-skip steps with a single valid answer
+  var f=S.finder,skipped=[];
+  while(f.step){var list=listFor(f.step,f.sel),valid=list.filter(function(x){return !x.off});
+    if(f.step!=="cat"&&valid.length===1&&list.length===1){f.sel[f.step]=valid[0].key;skipped.push(valid[0].title);f.step=nextStep(f.step);continue}
+    if(f.step==="trans"&&list.length===0){f.step=null;continue}
+    break}
+  f.skipped=skipped;if(!f.step){go("confirm");return true}return false;
+}
+function renderFinder(app){
+  var f=S.finder;if(f.step===undefined)f.step="cat";
+  if(advance())return;
+  var list=listFor(f.step,f.sel),title=STEPS.find(function(s){return s[0]===f.step})[1];
+  var crumbs=STEPS.filter(function(s){return f.sel[s[0]]}).map(function(s){var v=f.sel[s[0]];var lab=s[0]==="cat"?CATS.find(function(c){return c.id===v}).name:v;return '<button class="crumb" data-s="'+s[0]+'" aria-label="Change '+s[1]+': '+esc(lab)+'">'+esc(lab)+'</button>'}).join("")+'<span class="crumb now">'+esc(title)+'</span>';
+  var q=f.q||"";
+  app.innerHTML='<main class="wrap"><button class="link" id="back">Back</button>'+
+   '<nav class="crumbs" aria-label="Your choices">'+crumbs+'</nav>'+
+   '<div class="steptitle"><h2>'+({cat:"What are you tuning?",make:"Which make?",model:"Which model?",gen:"Which generation?",eng:"Which engine?",trans:"Which transmission?"}[f.step])+'</h2><span class="muted">'+list.filter(function(x){return !x.off}).length+' to choose from</span></div>'+
+   (f.hint&&f.step==="gen"?'<div class="note">Rego says '+esc(f.hint)+'. Generations covering it are listed first.</div>':'')+
+   (f.skipped&&f.skipped.length?'<div class="note">Only one option for '+esc(f.skipped.join(", "))+', so it’s selected.</div>':'')+
+   ((list.length>8||f.step==="make"||f.step==="model")?'<input class="search" id="q" placeholder="Search '+title.toLowerCase()+'" value="'+esc(q)+'" aria-label="Search">':'')+
+   '<div class="grid'+(f.step==="eng"||f.step==="trans"?" one":"")+'" id="tiles"></div>'+
+   (f.step==="cat"&&!catAllowed("truck")?'<p class="muted small" style="margin-top:14px">Trucks, ag and earthmoving come with a business licence. <button class="link" id="bizLink">See business licences</button></p>':'')+
+   (f.step==="eng"||f.step==="gen"?'<details style="margin-top:14px"><summary class="link">Not sure which one?</summary><p class="muted">Plug in the receiver and CarTune reads it for you. Or check the engine code on the rocker cover or compliance plate.</p></details>':'')+
+   '</main>';
+  $("back").onclick=function(){var i=STEPS.findIndex(function(s){return s[0]===f.step});var prev=STEPS.slice(0,i).reverse().find(function(s){return f.sel[s[0]]});if(!prev){go("welcome");return}f.step=prev[0];clearAfter(f.sel,prev[0]);delete f.sel[prev[0]];f.q="";render()};
+  app.querySelectorAll(".crumb[data-s]").forEach(function(b){b.onclick=function(){var s=b.dataset.s;f.step=s;delete f.sel[s];clearAfter(f.sel,s);f.q="";render()}});
+  if($("bizLink"))$("bizLink").onclick=function(){S.showBiz=true;setTab("shop")};
+  function paint(){var host=$("tiles");host.innerHTML="";var ql=(f.q||"").toLowerCase();
+    var l=list.slice();if(f.hint&&f.step==="gen"){var yr=+f.hint;l.sort(function(a,b){function hit(x){var m=(x.sub||"").match(/(\d{4})–(\d{4}|on)/);if(!m)return 1;var lo=+m[1],hi=m[2]==="on"?9999:+m[2];return yr>=lo&&yr<=hi?0:1}return hit(a)-hit(b)})}
+    l.filter(function(x){return !ql||(x.title+" "+(x.sub||"")).toLowerCase().indexOf(ql)>=0}).forEach(function(x){
+      var b=document.createElement("button");b.className="tile";if(x.off){b.setAttribute("aria-disabled","true")}
+      b.innerHTML='<b>'+esc(x.title)+'</b>'+(x.sub?'<small>'+esc(x.sub)+'</small>':'')+(x.cnt?'<span class="cnt">'+esc(x.cnt)+'</span>':'');
+      b.onclick=function(){if(x.off){toast(x.cnt||"Not supported yet");return}f.sel[f.step]=x.key;f.q="";f.step=nextStep(f.step);if(!f.step){go("confirm");return}render();window.scrollTo(0,0)};host.appendChild(b)})}
+  paint();
+  if($("q"))$("q").oninput=function(){f.q=this.value;paint()};
+}
+
+/* ---------------- confirm ---------------- */
+function resolve(sel){var row=ALL.find(function(c){return c.cat===sel.cat&&c.make===sel.make&&c.model===sel.model});if(!row)return null;var gen=row.gens.find(function(g){return g.g===sel.gen});var eng=gen&&gen.e.find(function(e){return e.n===sel.eng});return eng?{row:row,gen:gen,eng:eng}:null}
+function renderConfirm(app){
+  var f=S.finder,r=resolve(f.sel);if(!r){S.finder={sel:{},step:"cat"};go("finder");return}
+  var p=prof(r.eng.ecu),stt=STATUS[p.status]||["Supported","yellow"];
+  app.innerHTML='<main class="wrap"><button class="link" id="back">Back</button><h2 style="margin-bottom:12px">Is this your vehicle?</h2>'+
+  '<article class="vcard">'+sil(r.row.cat,r.row.model)+'<h2>'+esc(r.row.make+" "+r.row.model)+'</h2><p class="muted" style="margin:0">'+esc(r.gen.g+", "+r.gen.y)+'</p>'+
+  '<dl class="spec"><dt>Engine</dt><dd>'+esc((r.row.generic||r.gen.other)?r.eng.n+", exact engine read when you plug in":r.eng.n+" ("+r.eng.code+")")+'</dd>'+(r.eng.kw?'<dt>Factory output</dt><dd class="num" style="font-size:20px">'+r.eng.kw+' kW / '+r.eng.nm+' Nm</dd>':'')+
+  (f.sel.trans?'<dt>Transmission</dt><dd>'+esc(f.sel.trans)+'</dd>':'')+'<dt>ECU</dt><dd>'+esc(p.manufacturer+" "+p.family)+'</dd><dt>Found by</dt><dd>'+({receiver:"Receiver (read from the vehicle)",rego:"Free rego check, then your picks",vin:"VIN, then your picks"}[f.from]||"Your picks")+'</dd></dl>'+
+  '<span class="status">'+zm(stt[1])+esc(stt[0])+'</span></article>'+
+  '<div class="stack" style="margin-top:16px"><button class="btn primary" id="yes">Yes, save to my garage</button><button class="btn ghost" id="edit">Something’s wrong, change it</button></div></main>';
+  $("back").onclick=function(){go(f.from==="receiver"?"welcome":"finder")};
+  $("edit").onclick=function(){f.step="make";f.from=f.from||"manual";delete f.sel.make;clearAfter(f.sel,"make");go("finder")};
+  $("yes").onclick=function(){
+    var id="v"+Date.now();S.garage.push({id:id,cat:r.row.cat,make:r.row.make,model:r.row.model,gen:r.row.generic?"":r.gen.g,years:r.gen.y,eng:r.eng.n,code:r.eng.code,kw:r.eng.kw,nm:r.eng.nm,engine:r.eng.eng,ecu:r.eng.ecu,trans:f.sel.trans||"",backup:!!f.backup,fuel:r.eng.eng===TD?"diesel":"98"});
+    S.active=id;S.onCar[id]="factory";S.preset="factory";save();toast("Saved to garage");setTab("garage")};
+}
+
+/* ---------------- app shell ---------------- */
+function renderShell(app){
+  var v=veh();
+  var top='<header class="top"><div class="in"><button class="vbar" id="vbar" aria-label="Switch vehicle">'+
+    '<span class="dot'+(v&&v.backup?" on":"")+'" aria-hidden="true"></span><span><b>'+(v?esc(v.make+" "+v.model+" "+v.gen):"No vehicle yet")+'</b><span>'+(v?esc(v.eng):"Add one to start")+'</span></span></button>'+
+    '<button class="iconbtn" id="theme" aria-label="Sunlight mode">'+ICON.sun+'</button></div></header>';
+  var tabs=[["garage","Garage"],["tune","Tune"],["live","Live"],["flash","Flash"],["shop","Shop"]];
+  var nav='<nav class="tabs" aria-label="Main"><div class="in">'+tabs.map(function(t){return '<button class="tab" data-t="'+t[0]+'"'+(S.tab===t[0]?' aria-current="page"':'')+'>'+ICON[t[0]]+'<span>'+t[1]+'</span></button>'}).join("")+'</div></nav>';
+  app.innerHTML=top+'<main class="wrap" id="main"></main>'+nav;
+  app.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){setTab(b.dataset.t)}});
+  $("vbar").onclick=vehicleSheet;
+  $("theme").onclick=function(){var r=document.documentElement,cur=r.getAttribute("data-theme");var dark=cur?cur==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.setAttribute("data-theme",dark?"light":"dark");toast(dark?"Sunlight mode":"Night mode")};
+  var m=$("main");
+  if(!v&&S.tab!=="shop"){m.innerHTML='<h2>Add your first vehicle</h2><p class="muted">Everything in CarTune is set for one vehicle at a time.</p><button class="btn primary" id="add" style="margin-top:14px">Add a vehicle</button>';$("add").onclick=function(){go("welcome")};return}
+  ({garage:renderGarage,tune:renderTune,live:renderLive,flash:renderFlash,shop:renderShop})[S.tab](m,v);
+}
+function vehicleSheet(){
+  openSheet('<h2>My garage</h2><div class="stack" style="margin-top:12px">'+S.garage.map(function(v){return '<button class="btn row" data-id="'+v.id+'"'+(v.id===S.active?' aria-current="true" style="border-color:var(--accent)"':'')+'><span>'+esc(v.make+" "+v.model+" "+v.gen)+'<span class="sub">'+esc(v.eng)+(licensedFor(v)?", covered by your "+v.make+" licence":"")+'</span></span></button>'}).join("")+
+  '<button class="btn primary" id="addV">Add a vehicle</button></div>');
+  $("sheetIn").querySelectorAll("[data-id]").forEach(function(b){b.onclick=function(){S.active=b.dataset.id;save();closeSheet();render()}});
+  $("addV").onclick=function(){closeSheet();go("welcome")};
+}
+
+/* ---------------- garage ---------------- */
+function renderGarage(m,v){
+  var p=prof(v.ecu),stt=STATUS[p.status]||["Supported","yellow"],on=tuneInfo(v,S.onCar[v.id]||"factory");
+  m.innerHTML='<article class="vcard">'+sil(v.cat,v.model)+'<h2>'+esc(v.make+" "+v.model)+'</h2><p class="muted" style="margin:0">'+esc(v.gen+", "+v.years+", "+v.eng+(v.trans?", "+v.trans:""))+'</p>'+
+   '<dl class="spec"><dt>On the vehicle</dt><dd>'+esc(on.name)+' tune</dd><dt>Factory file</dt><dd>'+(v.backup?"Saved to your account":"Saved when you first plug in")+'</dd><dt>Licence</dt><dd>'+(licensedFor(v)?esc(v.make+" "+tierOf(licenceFor(v.make).tier).name+", covers every "+v.make+" you own"):"Not yet, exploring free")+'</dd></dl>'+
+   '<span class="status">'+zm(stt[1])+esc(stt[0])+'</span></article>'+
+   '<h3 style="margin:22px 0 8px">Switch tune</h3><p class="muted small" style="margin:0 0 8px">Tap to open. Each keeps your own changes.</p><div class="carts" id="carts"></div>'+
+   '<div class="stack" style="margin-top:8px"><button class="btn row" id="toStock"><span>Return to stock<span class="sub">Free, always. Puts the factory file back.</span></span></button>'+
+   (v.backup?'':'<button class="btn row" id="plug"><span>Plug in to read this vehicle<span class="sub">Confirms the ECU and saves the factory file</span></span></button>')+'</div>';
+  paintCarts($("carts"),v,function(id){S.preset=id;setTab("tune")});
+  $("toStock").onclick=function(){S.preset="factory";S.tab="flash";save();render()};
+  if($("plug"))$("plug").onclick=function(){v.backup=true;save();toast("Factory file saved");render()};
+}
+function paintCarts(host,v,onPick){
+  var curF=cur(v).folder;
+  host.innerHTML="";FL.orderedPresets().forEach(function(p){var b=document.createElement("button");b.className="cart";b.setAttribute("aria-pressed",p.id===curF?"true":"false");
+    var mine=userTunes(v,p.id).length,onHere=S.onCar[v.id]===p.id||userTunes(v,p.id).some(function(u){return S.onCar[v.id]==="u:"+u.id});
+    b.innerHTML='<span class="tlv">'+esc(["Factory","Road","Sport","Off-road / comp"][FL.presetLevel(p,v.engine)])+'</span><b>'+esc(p.name)+'</b>'+(onHere?'<span class="oncar">On vehicle</span>':mine?'<span class="mine">'+mine+' of yours</span>':'<span></span>')+
+    '<span class="meter"><span>Power</span><i><span style="width:'+p.power*20+'%"></span></i><span>Economy</span><i><span style="width:'+p.economy*20+'%"></span></i></span>';
+    b.onclick=function(){onPick(p.id)};host.appendChild(b)});
+  var sel=host.querySelector('[aria-pressed="true"]');if(sel)sel.scrollIntoView({block:"nearest",inline:"center"});
+}
+
+/* ---------------- tune ---------------- */
+var UP0={intercooler:false,fuelSystem:false,internals:false,cooling:false,driveline:false};
+function ctxFor(v){return{engine:v.engine,fuel:v.fuel,upgrades:v.upgrades||UP0,skill:S.skill}}
+/* Presets stay as shipped. Any change makes a user tune, which is auto-filed
+   under the closest preset it has permission for (permission always wins). */
+function presetById(id){return P.PRESETS.find(function(x){return x.id===id})}
+function userTunes(v,folder){return Object.keys(S.user).map(function(k){return S.user[k]}).filter(function(u){return u.vid===v.id&&(!folder||u.folder===folder)})}
+function tuneInfo(v,id){
+  if(id&&id.indexOf("u:")===0){var u=S.user[id.slice(2)];if(u&&u.vid===v.id){var fp=presetById(u.folder);return{id:id,name:u.name,feel:"Your tune, filed in "+fp.name,isUser:true,u:u,folder:u.folder}}}
+  var p=presetById(id)||presetById("factory");return{id:p.id,name:p.name,feel:p.feel,isUser:false,folder:p.id,power:p.power,economy:p.economy}}
+function cur(v){var t=tuneInfo(v,S.preset);if(!t.isUser)S.preset=t.id;return t}
+function values(v){var t=cur(v);if(t.isUser)return t.u.values;return P.presetValues(presetById(t.id),v.engine)}
+function fileInto(v,u){var f=FL.fileTune(v.engine,u.values),moved=u.folder&&u.folder!==f.presetId;u.folder=f.presetId;u.level=f.level;u.reasons=f.reasons;return moved}
+function setValues(v,vals){
+  var t=cur(v);
+  if(!t.isUser){ // first change to a preset: save it as the user's own tune
+    var base=t.name,n=1;while(userTunes(v).some(function(u){return u.name==="My "+base+" "+n}))n++;
+    var id=String(Date.now());var u={id:id,vid:v.id,name:"My "+base+" "+n,from:t.id,values:vals};fileInto(v,u);S.user[id]=u;S.preset="u:"+id;save();
+    toast("Saved as "+u.name+", filed in "+presetById(u.folder).name);return}
+  t.u.values=vals;var was=t.u.folder,moved=fileInto(v,t.u);save();if(moved)toast("Moved to "+presetById(t.u.folder).name+" folder")}
+function F(d,v,ctx){return d.format(v,ctx).replace(" vs stock","")}
+function lockedBy(id,seg){var pk=packFor(id,seg);if(pk&&!ownsPack(pk.id))return pk;return null}
+function folderRow(v,t){var list=userTunes(v,t.folder);if(!list.length)return"";var p=presetById(t.folder);
+  return '<p class="small" style="margin:2px 0 6px;font-weight:700">In the '+esc(p.name)+' folder</p><div class="folder"><button class="chip" data-t="'+p.id+'" aria-pressed="'+(!t.isUser)+'">'+esc(p.name)+' (preset)</button>'+list.map(function(u){return '<button class="chip" data-t="u:'+u.id+'" aria-pressed="'+(t.id==="u:"+u.id)+'">'+esc(u.name)+'</button>'}).join("")+'</div>'}
+function bindFolder(v){document.querySelectorAll(".folder .chip").forEach(function(b){b.onclick=function(){S.preset=b.dataset.t;render()}})}
+function renderTune(m,v){
+  var preset=cur(v),ctx=ctxFor(v),vals=values(v),ev=R.evaluate(ctx,vals);
+  var segs=R.segmentsFor(v.engine,S.skill);if(!S.sec||segs.indexOf(S.sec)<0)S.sec=segs[0];
+  var defs=R.settingsFor(v.engine,S.skill),tg=R.togglesFor(v.engine,S.skill);
+  function worst(g){var z="green";defs.concat(tg).filter(function(d){return d.segment===g}).forEach(function(d){var rz=ev.results[d.id].zone;if(["green","yellow","orange","red"].indexOf(rz)>["green","yellow","orange","red"].indexOf(z))z=rz});return z}
+  var fp=fingerprint(v,vals);
+  m.innerHTML='<div class="carts" id="carts"></div>'+
+   folderRow(v,preset)+
+   '<h2>'+esc(preset.name)+'</h2><p class="muted" style="margin-top:4px">'+esc(preset.feel)+'</p>'+
+   (preset.isUser?'<div class="filed"><b>Filed in '+esc(presetById(preset.folder).name)+'</b> ('+esc(FL.PERM_NAME[preset.u.level])+' permission)'+(preset.u.reasons.length?'<br><span class="muted small">Because: '+esc(preset.u.reasons.map(function(r){return r.label}).join(", "))+'</span>':'<br><span class="muted small">No safety systems or restrictions lifted.</span>')+'<div class="chips" style="margin-top:8px"><button class="chip" id="ren">Rename</button><button class="chip" id="del">Delete</button></div></div>':
+    '<p class="muted small">This is the preset as shipped. Change anything and it saves as your own tune, filed automatically.</p>')+
+   '<div class="dyno" style="margin-top:12px"><div class="legend"><span><i style="background:var(--dim)"></i>Stock</span><span><i style="background:var(--accent)"></i>'+esc(preset.name)+' (estimate)</span></div>'+dynoSvg(v,fp.gain)+'<p class="muted small">Estimated from your settings, not measured. Log a run after flashing to replace it with your real numbers.</p></div>'+
+   '<p style="margin:14px 0 4px;font-weight:700">How much detail?</p><div class="levels" role="group" aria-label="Detail level">'+
+   [["simple","Simple","Main controls"],["standard","Detailed","More controls"],["expert","Pro","Open ranges"]].map(function(l){return '<button data-l="'+l[0]+'" aria-pressed="'+(S.skill===l[0])+'">'+l[1]+'<span>'+l[2]+(l[0]==="expert"&&!hasPro()?", preview":"")+'</span></button>'}).join("")+'</div>'+
+   '<p style="margin:0 0 6px"><span class="status">'+zm(ev.overall)+'Overall: '+ZW[ev.overall]+'</span><br><span class="muted small">('+ev.counts.green+' safe, '+ev.counts.yellow+' mild, '+ev.counts.orange+' aggressive, '+ev.counts.red+' at limit)</span></p>'+
+   '<nav class="secnav" aria-label="Sections">'+segs.map(function(g){return '<button class="secbtn" data-g="'+esc(g)+'" aria-pressed="'+(S.sec===g)+'">'+zm(worst(g))+esc(g)+'</button>'}).join("")+'</nav>'+
+   '<div id="rows"></div>'+
+   (preset.isUser?'<button class="btn ghost" id="reset" style="margin-top:14px">Start again from '+esc(presetById(preset.u.from).name)+'</button>':'')+
+   '<button class="btn primary" id="toFlash" style="margin-top:10px">Review and flash '+esc(preset.name)+'</button>';
+  paintCarts($("carts"),v,function(id){S.preset=id;render()});
+  bindFolder(v);
+  if($("ren"))$("ren").onclick=function(){openSheet('<h2>Rename tune</h2><input class="search" id="nn" value="'+esc(preset.name)+'" aria-label="Tune name"><button class="btn primary" id="nok">Save</button>');$("nok").onclick=function(){var n=$("nn").value.trim();if(n){preset.u.name=n;save()}closeSheet();render()}};
+  if($("del"))$("del").onclick=function(){var f=preset.folder;delete S.user[preset.u.id];if(S.onCar[v.id]===preset.id)S.onCar[v.id]="factory";S.preset=f;save();toast("Deleted");render()};
+  m.querySelectorAll(".levels button").forEach(function(b){b.onclick=function(){S.skill=b.dataset.l;save();render()}});
+  m.querySelectorAll(".secbtn").forEach(function(b){b.onclick=function(){S.sec=b.dataset.g;render()}});
+  if($("reset"))$("reset").onclick=function(){preset.u.values=P.presetValues(presetById(preset.u.from),v.engine);fileInto(v,preset.u);save();toast("Back to "+presetById(preset.u.from).name+" settings");render()};
+  $("toFlash").onclick=function(){setTab("flash")};
+  var rows=$("rows");
+  defs.filter(function(d){return d.segment===S.sec}).forEach(function(d){rows.appendChild(settingRow(v,d,ctx,vals,ev))});
+  var ts=tg.filter(function(t){return t.segment===S.sec});
+  if(ts.length){var h=document.createElement("h3");h.style.margin="22px 0 4px";h.textContent="On and off";rows.appendChild(h);ts.forEach(function(t){rows.appendChild(switchRow(v,t,ctx,vals,ev))})}
+  var sc=m.querySelector('.secbtn[aria-pressed="true"]');if(sc)sc.scrollIntoView({block:"nearest",inline:"center"});
+}
+function applyA(v,a){
+  if(a.kind==="toggle"){var t=R.TOGGLES.find(function(x){return x.id===a.id});if(t&&t.agreement&&a.value!==t.stock&&!S.agreed){agreement(function(){applyA(v,a)});return}}
+  var ctx=ctxFor(v),res=R.applyAction(ctx,values(v),a);v.fuel=res.ctx.fuel;v.upgrades=res.ctx.upgrades;setValues(v,res.values);render();
+}
+function fixList(v,title,list,key){if(!list.length)return"";var all=S.open["fx:"+key+title],shown=all?list:list.slice(0,4);return '<div class="fixes"><h4>'+esc(title)+'</h4>'+shown.map(function(a,i){return '<button class="fix" data-fx="'+i+'" data-t="'+esc(title)+'">'+esc(a.text)+(a.why?'<small>'+esc(a.why)+'</small>':'')+'</button>'}).join("")+(list.length>4&&!all?'<button class="more" data-morefx="'+esc(key+title)+'">'+(list.length-4)+' more ways</button>':'')+'</div>'}
+function bindFixes(el,v,groups){el.querySelectorAll("[data-morefx]").forEach(function(b){b.onclick=function(){S.open["fx:"+b.dataset.morefx]=true;render()}});el.querySelectorAll(".fix").forEach(function(b){b.onclick=function(){var g=groups[b.dataset.t];applyA(v,g[+b.dataset.fx].action);toast("Applied")}})}
+function lockRow(pk){return '<div class="locked"><b>Part of the '+esc(pk.name)+' pack</b><button class="chip" data-pack="'+pk.id+'">'+money(pk.price)+'</button></div>'}
+function bindLock(el){el.querySelectorAll("[data-pack]").forEach(function(b){b.onclick=function(){S.cart.packs[b.dataset.pack]=1;S.showBiz=S.showBiz;setTab("shop")}})}
+function settingRow(v,d,ctx,vals,ev){
+  var r=ev.results[d.id],val=vals[d.id],el=document.createElement("section");el.className="set";
+  var stock=d.stockBy&&d.stockBy[v.engine]!=null?d.stockBy[v.engine]:d.stock,pk=lockedBy(d.id,d.segment);
+  var rg=R.rangeFor(d,hasPro()?S.skill:(S.skill==="expert"?"standard":S.skill));
+  var open=S.open[d.id]||r.zone==="orange"||r.zone==="red";
+  el.innerHTML='<div class="sethead"><div><h3>'+esc(d.name)+'</h3><span class="stock">Stock '+esc(F(d,stock,ctx))+'</span></div><span class="num val">'+esc(F(d,val,ctx))+'</span></div>'+
+   (pk?lockRow(pk):
+   '<div class="tapewrap"><button class="step" aria-label="Decrease">−</button><div class="tape" tabindex="0" role="slider" aria-label="'+esc(d.name)+'" aria-valuemin="'+rg.min+'" aria-valuemax="'+rg.max+'" aria-valuenow="'+val+'" aria-valuetext="'+esc(d.format(val,ctx)+", "+ZW[r.zone])+'"><div class="fade l"></div><div class="fade r"></div><div class="needle"></div></div><button class="step" aria-label="Increase">+</button></div>'+
+   '<div class="zword '+r.zone+'">'+zm(r.zone)+ZW[r.zone]+'</div><p>'+esc(r.effect)+'</p><p class="muted">'+esc(r.headline)+'</p>'+(r.why?'<p class="muted small">'+esc(r.why)+'</p>':'')+
+   fixList(v,"Fix it with other settings",r.otherFixes,d.id)+fixList(v,"Or adjust this one",r.advice,d.id)+
+   '<button class="more">'+(open?"Less":"What does this do?")+'</button>'+(open?'<p class="muted">'+esc(S.skill==="expert"?d.what.expert:d.what.simple)+'</p>'+(r.risks?'<div class="risk"><b>What can go wrong</b><p>'+esc(r.risks)+'</p></div>':''):''));
+  if(pk){bindLock(el);return el}
+  var tape=el.querySelector(".tape");
+  function set(nv){nv=Math.min(rg.max,Math.max(rg.min,Math.round((nv-rg.min)/d.step)*d.step+rg.min));nv=+nv.toFixed(3);if(nv===values(v)[d.id])return;var nvals=Object.assign({},values(v));nvals[d.id]=nv;setValues(v,nvals);if(navigator.vibrate)navigator.vibrate(4);render()}
+  var sb=el.querySelectorAll(".step");sb[0].onclick=function(){set(val-d.step)};sb[1].onclick=function(){set(val+d.step)};
+  requestAnimationFrame(function(){drawTape(tape,d,val,r.bands,ctx,S.skill,rg,stock)});
+  dragTape(tape,d,rg,function(){return values(v)[d.id]},set);
+  tape.onkeydown=function(e){if(e.key==="ArrowRight"||e.key==="ArrowUp"){set(val+d.step);e.preventDefault()}if(e.key==="ArrowLeft"||e.key==="ArrowDown"){set(val-d.step);e.preventDefault()}};
+  bindFixes(el,v,{"Fix it with other settings":r.otherFixes,"Or adjust this one":r.advice});
+  el.querySelector(".more").onclick=function(){S.open[d.id]=!open;render()};
+  return el;
+}
+function drawTape(tape,d,val,b,ctx,skill,rg,stock){
+  rg=rg||R.rangeFor(d,skill);stock=stock==null?d.stock:stock;
+  var W=tape.clientWidth||300,H=tape.clientHeight||72,steps=Math.round((rg.max-rg.min)/d.step),px=Math.max(10,Math.min(28,900/steps));
+  var len=steps*px,svgW=len+W,x0=W/2;
+  function X(v){return x0+(v-rg.min)/d.step*px}
+  var col=getComputedStyle(document.documentElement),zc={green:col.getPropertyValue("--g"),yellow:col.getPropertyValue("--y"),orange:col.getPropertyValue("--o"),red:col.getPropertyValue("--r")};
+  var band="";function seg(a,c,z){a=Math.max(a,rg.min);c=Math.min(c,rg.max);if(c<=a)return;band+='<rect x="'+X(a)+'" y="'+(H-12)+'" width="'+(X(c)-X(a))+'" height="8" fill="'+zc[z]+'"/>'}
+  var lo=b.low!=null?b.low:-Infinity;seg(rg.min,Math.min(lo,rg.max),"yellow");seg(Math.max(lo,rg.min),b.g,"green");seg(b.g,b.y,"yellow");seg(b.y,b.o,"orange");seg(b.o,rg.max,"red");
+  var ticks="",major=Math.max(1,Math.round(steps/Math.floor(len/90)));
+  for(var i=0;i<=steps;i++){var vv=rg.min+i*d.step,x=X(vv),mj=i%major===0;ticks+='<line x1="'+x+'" x2="'+x+'" y1="'+(mj?14:22)+'" y2="'+(H-16)+'" stroke="currentColor" stroke-opacity="'+(mj?.8:.35)+'" stroke-width="'+(mj?2:1)+'"/>';
+    if(mj)ticks+='<text x="'+(x+4)+'" y="'+(H-20)+'" font-size="12" fill="currentColor" fill-opacity=".7" font-family="Saira Condensed, sans-serif">'+esc(d.format(+vv.toFixed(3),ctx).replace(/ vs stock| less| faster| later/g,""))+'</text>'}
+  var sx=X(stock);var notch='<path d="M'+(sx-7)+' 0h14l-7 10z" fill="currentColor"/><line x1="'+sx+'" x2="'+sx+'" y1="0" y2="'+H+'" stroke="currentColor" stroke-dasharray="3 3" stroke-opacity=".6"/>';
+  var svg=tape.querySelector("svg");if(!svg){svg=document.createElementNS("http://www.w3.org/2000/svg","svg");tape.insertBefore(svg,tape.firstChild)}
+  svg.setAttribute("width",svgW);svg.setAttribute("viewBox","0 0 "+svgW+" "+H);svg.style.color="var(--text)";svg.innerHTML=band+ticks+notch;
+  tape._px=px;tape._set=function(v){svg.style.transform="translateX("+(W/2-X(v))+"px)"};tape._set(val);
+}
+function dragTape(tape,d,rg,get,set){
+  var sx=null,sv=0,last=null;
+  tape.addEventListener("pointerdown",function(e){sx=e.clientX;sv=get();last=sv;tape.setPointerCapture(e.pointerId)});
+  tape.addEventListener("pointermove",function(e){if(sx==null)return;var dv=-(e.clientX-sx)/tape._px*d.step;var nv=Math.min(rg.max,Math.max(rg.min,Math.round((sv+dv-rg.min)/d.step)*d.step+rg.min));tape._set(nv);if(nv!==last){last=nv;if(navigator.vibrate)navigator.vibrate(3)}});
+  function end(){if(sx==null)return;sx=null;if(last!==sv)set(last)}
+  tape.addEventListener("pointerup",end);tape.addEventListener("pointercancel",end);
+}
+function switchRow(v,t,ctx,vals,ev){
+  var r=ev.results[t.id],on=R.isOn(t,vals),el=document.createElement("section");el.className="set";
+  var pk=lockedBy(t.id,t.segment),guarded=t.zone==="red"&&on===t.stock&&!S.guard[t.id];
+  el.innerHTML='<div class="sw"><h3>'+esc(t.name)+'</h3>'+(pk?'':'<span class="guard"><button class="toggle" role="switch" aria-checked="'+on+'" aria-label="'+esc(t.name)+'"></button>'+(guarded?'<button class="cover" aria-label="Lift the cover to change '+esc(t.name)+'">Lift</button>':'')+'</span>')+'</div>'+
+   (pk?lockRow(pk):
+   '<div class="zword '+r.zone+'">'+zm(r.zone)+(on?"On":"Off")+(on===t.stock?", factory setting":", changed")+'</div>'+(on!==t.stock?'<p class="muted">'+esc(r.headline)+'</p>':'')+(r.risks?'<div class="risk"><b>What can go wrong</b><p>'+esc(r.risks)+'</p></div>':'')+
+   fixList(v,"Other settings that cover it",r.otherFixes,t.id)+fixList(v,"Or undo it",r.advice,t.id)+'<p class="muted small">'+esc(S.skill==="expert"?t.what.expert:t.what.simple)+'</p>');
+  if(pk){bindLock(el);return el}
+  var c=el.querySelector(".cover");if(c)c.onclick=function(){S.guard[t.id]=true;render();toast("Cover lifted")};
+  el.querySelector(".toggle").onclick=function(){applyA(v,{kind:"toggle",id:t.id,value:!on})};
+  bindFixes(el,v,{"Other settings that cover it":r.otherFixes,"Or undo it":r.advice});
+  return el;
+}
+function agreement(then){
+  openSheet('<h2>User agreement</h2><p>Emissions-system changes are for off-road, competition and export use. You’re responsible for how and where the vehicle is used and for the matching hardware work.</p><div class="stack" style="margin-top:14px"><button class="btn primary" id="agYes">I accept</button><button class="btn ghost" id="agNo">Cancel</button></div>');
+  $("agNo").onclick=closeSheet;$("agYes").onclick=function(){S.agreed=true;save();closeSheet();then()};
+}
+function fingerprint(v,vals){
+  var g=(vals.timing_wot||0)*1.4+(vals.boost_add||0)*2.4+(vals.fuel_add||0)*.55+(vals.diesel_boost_add||0)*1.6+(vals.rail_add||0)*.35+(vals.inj_timing||0)*.8+Math.max(0,vals.rev_add||0)/400;
+  return{gain:Math.max(0,Math.min(35,g))};
+}
+function dynoSvg(v,gain){
+  var kw=v.kw||200,nm=v.nm||500,W=320,H=150,diesel=v.engine===TD;
+  var rpm=diesel?[1000,1500,2000,2500,3000,3500,4000]:[1500,2500,3500,4500,5000,5500,6000];
+  var shape=diesel?[.35,.62,.84,.97,1,.94,.82]:[.3,.52,.72,.9,.97,1,.93];
+  var peak=kw*1.25,px=function(i){return 30+i*(W-40)/(rpm.length-1)},py=function(k){return H-20-(k/peak)*(H-34)};
+  var st=shape.map(function(s,i){return px(i)+","+py(kw*s)}).join(" "),tu=shape.map(function(s,i){var boost=1+gain/100*(diesel?(i<2?1.25:i>4?.7:1):(i<2?.6:1.05));return px(i)+","+py(kw*s*boost)}).join(" ");
+  var peakT=Math.round(kw*(1+gain/100));
+  return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Power curve: stock '+kw+' kW, estimate '+peakT+' kW"><g fill="none" stroke-linecap="round" stroke-linejoin="round">'+
+   '<line x1="30" x2="'+(W-10)+'" y1="'+(H-20)+'" y2="'+(H-20)+'" stroke="var(--line)"/>'+
+   '<polyline points="'+st+'" stroke="var(--dim)" stroke-width="3" stroke-dasharray="6 5"/><polyline points="'+tu+'" stroke="var(--accent)" stroke-width="4"/></g>'+
+   rpm.map(function(r,i){return i%2===0?'<text x="'+px(i)+'" y="'+(H-4)+'" font-size="11" fill="var(--dim)" text-anchor="middle">'+r+'</text>':''}).join("")+
+   '<text x="30" y="14" font-size="13" fill="var(--text)" font-family="Saira Condensed, sans-serif">'+(v.kw?'<tspan font-size="22" font-weight="700">'+peakT+' kW</tspan> est. peak, stock '+kw+' kW':'Output figures for this vehicle come from your first logged run')+'</text></svg>';
+}
+
+/* ---------------- live ---------------- */
+function renderLive(m,v){
+  var diesel=v.engine===TD;
+  m.innerHTML='<h2>Live</h2><p class="muted">Demo readings. With the receiver plugged in these come from the vehicle.</p><div class="gauges" id="gg" style="margin-top:12px"></div>'+
+   '<div class="dyno"><div class="legend"><span><i style="background:var(--dim)"></i>Stock (factory file)</span><span><i style="background:var(--accent)"></i>Your last run</span></div>'+dynoSvg(v,0)+'<button class="btn primary" id="log" style="margin-top:10px">Log a run</button><p class="muted small">Record a full-throttle pull in 3rd gear on a closed road or dyno. CarTune overlays it on stock and checks knock, mixture and temperature.</p></div>'+
+   '<h3 style="margin:22px 0 8px">Fault codes</h3><div class="check ok"><span class="ic">✓</span><div><b>No stored codes</b><span class="muted small">Engine, transmission, ABS and body checked</span></div></div>';
+  var g=[["RPM",diesel?"":"","rpm",800,diesel?4200:6500],[diesel?"Boost":"Load",diesel?"kPa":"%","b",20,diesel?220:100],["Coolant","°C","c",70,110],[diesel?"EGT":"Mixture",diesel?"°C":"λ","a",diesel?200:0.8,diesel?750:1.05]];
+  var t=0;clearInterval(S.live);function tick(){t+=.18;$("gg")&&($("gg").innerHTML=g.map(function(x,i){var f=(Math.sin(t+i*1.3)+1)/2,val=x[3]+(x[4]-x[3])*(i===2?.55+f*.1:f*.6);var shown=x[4]<2?val.toFixed(2):Math.round(val);return '<div class="gauge"><small>'+x[0]+'</small><div class="num">'+shown+' <span style="font-size:18px">'+x[1]+'</span></div><div class="bar"><span style="width:'+Math.round((val-x[3])/(x[4]-x[3])*100)+'%"></span></div></div>'}).join(""));if(S.tab!=="live")clearInterval(S.live)}
+  tick();if(!matchMedia("(prefers-reduced-motion: reduce)").matches)S.live=setInterval(tick,400);
+  $("log").onclick=function(){toast("Plug in the receiver to log a run")};
+}
+
+/* ---------------- flash ---------------- */
+function renderFlash(m,v){
+  var preset=cur(v),vals=values(v),ctx=ctxFor(v),stock=R.stockValues(v.engine);
+  var p=prof(v.ecu),changed=[];
+  R.settingsFor(v.engine,"expert").forEach(function(d){if(Math.abs((vals[d.id]||0)-(stock[d.id]||0))>1e-9)changed.push([d.name,F(d,stock[d.id],ctx),F(d,vals[d.id],ctx)])});
+  R.togglesFor(v.engine,"expert").forEach(function(t){var on=R.isOn(t,vals);if(on!==t.stock)changed.push([t.name,t.stock?"On":"Off",on?"On":"Off"])});
+  var lic=licensedFor(v),canWrite=p.status==="ready";
+  m.innerHTML='<h2>Flash '+esc(preset.name)+'</h2><p class="muted">'+(preset.id==="factory"?"Puts the factory file back. Always free.":changed.length+" change"+(changed.length===1?"":"s")+" from stock.")+'</p>'+
+   (changed.length?'<div class="diff" style="margin:14px 0"><b>Setting</b><b class="muted">Stock</b><b>New</b>'+changed.map(function(c){return '<span>'+esc(c[0])+'</span><span class="num muted">'+esc(c[1])+'</span><span class="num">'+esc(c[2])+'</span>'}).join("")+'</div>':'')+
+   '<hr><h3>Before writing</h3><div id="checks"></div><div id="act" style="margin-top:14px"></div>';
+  var volt=12.4,charger=false,cable=false;
+  var checks=function(){return[
+    ["Battery voltage",'<span class="num volt">'+volt.toFixed(1)+' V</span><br>'+(volt>=12.6?"Steady. Keep the charger on until finished.":"Too low to flash safely. Connect a battery charger."),volt>=12.6],
+    ["Receiver and cable test",cable?"Passed":"Tap to run",cable],
+    ["Factory file saved",v.backup?"Stored in your account":"Plug in once to save it",v.backup],
+    ["Ignition on, engine off","Doors shut, lights, fan and radio off",true]]};
+  function paint(){$("checks").innerHTML=checks().map(function(c,i){return '<div class="check '+(c[2]?"ok":"bad")+'" data-i="'+i+'"><span class="ic">'+(c[2]?"✓":"!")+'</span><div><b>'+c[0]+'</b><span class="small">'+c[1]+'</span></div></div>'}).join("")+
+    (volt<12.6?'<button class="btn" id="chg">Charger connected</button>':'')+(!cable?'<button class="btn" id="cbl" style="margin-top:8px">Run cable test</button>':'')+(!v.backup?'<button class="btn" id="bk" style="margin-top:8px">Read and save factory file</button>':'');
+    if($("chg"))$("chg").onclick=function(){volt=13.6;paint()};
+    if($("cbl"))$("cbl").onclick=function(){cable=true;paint()};
+    if($("bk"))$("bk").onclick=function(){v.backup=true;save();paint()};
+    var ready=checks().every(function(c){return c[2]}),act=$("act");
+    if(preset.id!=="factory"&&!lic){act.innerHTML='<div class="locked"><b>Writing a tune needs a '+esc(v.make)+' licence. One payment covers every '+esc(v.make)+' you own, now and later.</b></div><button class="btn primary" id="buy" style="margin-top:10px">See licences</button>';$("buy").onclick=function(){S.cart.makes=[v.make];setTab("shop")};return}
+    if(!canWrite){act.innerHTML='<div class="note">'+esc(STATUS[p.status][0])+'. Your tune is saved and flashes as soon as writing opens for '+esc(p.family)+'.</div>';return}
+    act.innerHTML='<button class="btn primary" id="go"'+(ready?'':' disabled')+'>'+(preset.id==="factory"?"Return to stock":"Flash "+esc(preset.name))+'</button>'+(ready?'':'<p class="muted small">Every check needs a tick first.</p>');
+    if(ready)$("go").onclick=function(){doFlash(v,preset)}}
+  paint();
+}
+function doFlash(v,preset){
+  var steps=["Unlocking ECU","Erasing calibration area","Writing "+preset.name,"Checking what was written","Restarting ECU"],i=0;
+  openSheet('<h2>Flashing</h2><p class="muted">Don’t unplug or turn the key. About 2 minutes.</p><div id="fs"></div>');
+  function tick(){$("fs").innerHTML=steps.map(function(s,k){return '<div class="check '+(k<i?"ok":k===i?"run":"")+'"><span class="ic">'+(k<i?"✓":"")+'</span><div><b>'+esc(s)+'</b></div></div>'}).join("");
+    if(i<steps.length){i++;setTimeout(tick,700)}else{S.onCar[v.id]=preset.id;save();
+      $("fs").insertAdjacentHTML("afterend",'<h3 style="margin-top:14px">'+esc(preset.name)+' is on the vehicle</h3><p class="muted">Start the engine and let it idle for a minute. If anything feels wrong, Return to stock is one tap on the Garage screen.</p><button class="btn primary" id="done" style="margin-top:10px">Log a before/after run</button>');
+      $("done").onclick=function(){closeSheet();setTab("live")}}}
+  tick();
+}
+
+/* ---------------- shop ---------------- */
+function renderShop(m,v){
+  var own=S.owned,c=S.cart;
+  if(!c.makes.length&&v)c.makes=[v.make];
+  var visible=TIERS.filter(function(t){return !t.biz||S.showBiz||own.licences.some(function(l){return l.tier===t.id})});
+  function lineItems(){ // price each chosen make at the chosen level; upgrades pay the difference
+    if(!c.tier)return[];var t=tierOf(c.tier),items=[],firstNew=!own.licences.some(function(l){return l.tier===c.tier});
+    c.makes.forEach(function(mk){var ex=licenceFor(mk);if(ex&&ex.tier===c.tier)return;
+      var full=firstNew?t.price:Math.round(t.price*EXTRA_MAKE);firstNew=false;
+      var credit=ex?(tierOf(ex.tier).price>=t.price?full:Math.min(full,tierOf(ex.tier).price)):0;
+      items.push({label:t.name+" licence, "+mk+(ex?" (upgrade from "+tierOf(ex.tier).name+")":""),price:Math.max(0,full-credit),make:mk})});
+    return items}
+  function total(){var n=lineItems().reduce(function(a,b){return a+b.price},0);Object.keys(c.packs).forEach(function(k){n+=PACKS.find(function(x){return x.id===k}).price});return n}
+  m.innerHTML='<h2>Licences</h2><p class="muted">One payment per make. Every vehicle of that make you own, now and later, is covered.</p>'+
+   '<div class="promise"><b>Our promise</b><span>No subscriptions, no renewals, no surprise charges.</span><span>Every price is shown here before you pay.</span><span>Return to stock is free, forever.</span><span>Explore, tune and preview free. You only pay to write to the vehicle.</span></div>'+
+   '<h3 style="margin:18px 0 10px">1. Choose a level</h3><div class="stack" id="tiers"></div>'+
+   (S.showBiz?'':'<button class="link" id="biz">Trucks, ag or earthmoving? See business licences</button>')+
+   (c.tier?'<h3 style="margin:22px 0 4px">2. Choose your make</h3><p class="muted small" style="margin:0 0 10px">First make '+money(tierOf(c.tier).price)+'. Each extra make '+money(Math.round(tierOf(c.tier).price*EXTRA_MAKE))+'.</p><div class="chips" id="makes"></div>':'')+
+   '<h3 style="margin:22px 0 4px">'+(c.tier?"3. ":"")+'Optional packs</h3><p class="muted small" style="margin:0">One-off. Work across every make you licence.</p><div id="packs"></div>'+
+   (own.licences.length?'<h3 style="margin:22px 0 8px">What you own</h3>'+own.licences.map(function(l){return '<p><b>'+esc(l.make)+'</b>, '+esc(tierOf(l.tier).name)+'</p>'}).join("")+(own.packs.length?'<p class="muted">Packs: '+esc(own.packs.map(function(k){return PACKS.find(function(p){return p.id===k}).name}).join(", "))+'</p>':'')+'<button class="btn ghost" id="xfer">Change a licence to another make</button><button class="link" id="resetDemo">Reset demo purchases</button>':'')+
+   '<p class="muted small" style="margin-top:18px">Prices in AUD including GST. Demo checkout, no payment is taken.</p>';
+  var th=$("tiers");visible.forEach(function(t){var sel=c.tier===t.id;var b=document.createElement("button");b.className="tier";b.setAttribute("aria-pressed",sel?"true":"false");
+    b.innerHTML='<div class="sethead"><h3>'+esc(t.name)+'</h3><span class="num price">'+money(t.price)+'</span></div><span class="muted">'+esc(t.blurb)+', per make</span><ul>'+t.inc.map(function(i){return '<li>'+esc(i)+'</li>'}).join("")+'</ul>';
+    b.onclick=function(){c.tier=sel?null:t.id;if(c.tier){var ok=makesFor(c.tier);c.makes=c.makes.filter(function(x){return ok.indexOf(x)>=0});if(!c.makes.length&&v&&ok.indexOf(v.make)>=0)c.makes=[v.make]}render()};th.appendChild(b)});
+  if($("biz"))$("biz").onclick=function(){S.showBiz=true;render()};
+  if($("makes")){var mh=$("makes");makesFor(c.tier).forEach(function(mk){var ex=licenceFor(mk),same=ex&&ex.tier===c.tier;var b=document.createElement("button");b.className="chip";b.setAttribute("aria-pressed",c.makes.indexOf(mk)>=0&&!same?"true":"false");
+    b.textContent=mk+(same?" (owned)":ex?" (upgrade)":"");if(same)b.disabled=true;
+    b.onclick=function(){var i=c.makes.indexOf(mk);if(i>=0)c.makes.splice(i,1);else c.makes.push(mk);render()};mh.appendChild(b)})}
+  var ph=$("packs");PACKS.forEach(function(p){var have=own.packs.indexOf(p.id)>=0,n=c.packs[p.id]||0;var d=document.createElement("div");d.className="pack";
+    d.innerHTML='<div><b>'+esc(p.name)+'</b><br><span class="muted small">'+esc(p.what)+'</span></div><span class="num">'+money(p.price)+'</span>'+(have?'<span style="color:var(--g);font-weight:700">Owned</span>':'<button class="chip" aria-pressed="'+(n>0)+'">'+(n?"Added":"Add")+'</button>');
+    var b=d.querySelector("button");if(b)b.onclick=function(){if(n)delete c.packs[p.id];else c.packs[p.id]=1;render()};ph.appendChild(d)});
+  var tot=total(),items=lineItems();
+  if(tot>0){var bar=document.createElement("div");bar.className="cartbar";bar.innerHTML='<div class="in"><span>Total<br><span class="num">'+money(tot)+'</span></span><button id="pay">Review and pay</button></div>';m.appendChild(bar);
+    $("pay").onclick=function(){openSheet('<h2>Checkout</h2><div class="diff" style="margin:12px 0;grid-template-columns:1fr auto">'+
+      items.map(function(i){return '<span>'+esc(i.label)+'</span><span class="num">'+money(i.price)+'</span>'}).join("")+
+      Object.keys(c.packs).map(function(k){var p=PACKS.find(function(x){return x.id===k});return '<span>'+esc(p.name)+' pack</span><span class="num">'+money(p.price)+'</span>'}).join("")+
+      '<b>Total, paid once</b><b class="num">'+money(tot)+'</b></div><p class="muted small">Nothing else will be charged. No renewals.</p><button class="btn primary" id="confirmPay" style="margin-top:10px">Pay '+money(tot)+'</button>');
+      $("confirmPay").onclick=function(){items.forEach(function(i){var ex=licenceFor(i.make);if(ex)ex.tier=c.tier;else own.licences.push({tier:c.tier,make:i.make})});Object.keys(c.packs).forEach(function(k){if(own.packs.indexOf(k)<0)own.packs.push(k)});S.cart={tier:null,makes:[],packs:{}};save();closeSheet();toast("Paid. Thanks!");render()}}}
+  if($("xfer"))$("xfer").onclick=function(){openSheet('<h2>Change make</h2><p>Sold your last '+esc(own.licences[0].make)+'? Move that licence to another make, free. Return the old vehicle to stock first.</p><button class="btn primary" id="okx" style="margin-top:10px">Got it</button>');$("okx").onclick=closeSheet};
+  if($("resetDemo"))$("resetDemo").onclick=function(){S.owned={licences:[],packs:[]};S.agreed=false;save();render()};
+}
+
+render();
+</script>
+</body>
+</html>
