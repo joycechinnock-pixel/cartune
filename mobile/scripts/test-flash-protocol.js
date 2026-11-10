@@ -1,7 +1,28 @@
+// Like run-node-tests.js, run against a fresh transpile of the existing sources.
+// Direct invocation used to resolve ./utils relative to scripts/ instead of src/.
+if (require("fs").existsSync(require("path").join(__dirname, "lib-ts.js"))) {
+  const fs = require("fs"), path = require("path"), os = require("os");
+  const { execFileSync } = require("child_process");
+  const out = fs.mkdtempSync(path.join(os.tmpdir(), "cartune-flash-test-"));
+  try {
+    require("./lib-ts").transpileTree(out);
+    const test = path.join(out, "test-flash-protocol.js");
+    fs.copyFileSync(__filename, test);
+    execFileSync(process.execPath, [test], { stdio: "inherit" });
+  } catch (e) { process.exitCode = e.status || 1; }
+  finally { fs.rmSync(out, { recursive: true, force: true }); }
+} else {
 const crypto = require("crypto");
 const assert = require("assert");
 const { sha256Hex } = require("./utils/sha256");
 const { FlashReceiver, parseStatus } = require("./ble/flashReceiver");
+
+// Published FIPS SHA-256 vectors, in addition to Node-crypto edge sizes.
+for (const [text, expected] of [
+  ["", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],
+  ["abc", "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"],
+  ["abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq", "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1"],
+]) assert.strictEqual(sha256Hex(new Uint8Array(Buffer.from(text))), expected);
 
 // SHA-256 vs Node crypto across edge sizes
 for (const n of [0, 1, 55, 56, 63, 64, 65, 1000, 1024 * 1024 + 7]) {
@@ -61,3 +82,5 @@ function mockRx({ corrupt = false, finalStatus = "SUCCESS", info = "CARTUNE-RX 1
   assert.strictEqual(parseStatus("banana").state, "unknown");
   console.log("ALL MOBILE PROTOCOL TESTS PASSED");
 })().catch((e) => { console.error(e); process.exit(1); });
+
+}
